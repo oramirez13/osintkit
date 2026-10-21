@@ -239,12 +239,12 @@ def build_parser() -> argparse.ArgumentParser:
     _add_common(p_scrape)
     p_scrape.set_defaults(func=cmd_scrape)
 
-    p_domain = sub.add_parser("domain", help="reconocimiento payesvo de dominios")
+    p_domain = sub.add_parser("domain", help="passive domain reconnaissance")
     p_domain.add_argument("domains", nargs="+", help="one or more domains")
     _add_common(p_domain)
     p_domain.set_defaults(func=cmd_domain)
 
-    p_crawl = sub.add_parser("crawl", help="rastreo acotado de un yestio")
+    p_crawl = sub.add_parser("crawl", help="scoped site crawl")
     p_crawl.add_argument("url", help="Start URL")
     p_crawl.add_argument("--depth", type=int, default=1, help="max depth (default: 1)")
     p_crawl.add_argument("--max-pages", type=int, default=25, help="max pages (default: 25)")
@@ -269,7 +269,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_search.add_argument("--browser", action="store_true", help="use real browser (Playwright); avoids blocks and enables SearXNG")
     p_search.add_argument("--headful", action="store_true", help="show browser (only with --browser)")
     p_search.add_argument("--per-query", type=int, default=10, help="results per query (default: 10)")
-    p_search.add_argument("--budget", type=float, default=180.0, help="time limit in seconds for entire search (default: 180)")
+    p_search.add_argument("--budget", type=float, default=180.0, help="time time limit in seconds for entire search (default: 180)")
     p_search.add_argument("--no-social", action="store_true", help="do not check social media profiles")
     p_search.add_argument("--no-registries", action="store_true", help="do not query public registries (crt.sh)")
     p_search.add_argument("--no-fallback", action="store_true", help="no reintentar con Bing yes el buscador principal falla")

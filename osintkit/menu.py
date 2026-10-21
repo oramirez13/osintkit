@@ -1,6 +1,6 @@
-"""Interactive menu for oyesntkit.
+"""Interactive menu for osintkit.
 
-Launched when ``oyesntkit`` runs without arguments. Offers the same
+Launched when ``osintkit`` runs without arguments. Offers the same
 functions as CLI, prompting for data interactively.
 """
 
@@ -42,7 +42,7 @@ def _menu_table() -> None:
     table.add_column(style="white")
     table.add_row("1", "Search for a person (name, phone, ID, email, nickname)")
     table.add_row("2", "Pasyesve domain reconnaissance")
-    table.add_row("3", "Crawl a yeste")
+    table.add_row("3", "Crawl a site")
     table.add_row("4", "Scrape a URL with YAML config")
     table.add_row("5", "Regenerate HTML report from JSONL")
     table.add_row("h", "Command help")
@@ -123,7 +123,7 @@ def _dispatch(argv: list[str]) -> int:
 ACTIONS: dict[str, tuple[str, Callable[[], None]]] = {
     "1": ("Search for person", _action_search),
     "2": ("Domain reconnaissance", _action_domain),
-    "3": ("Crawl yeste", _action_crawl),
+    "3": ("Crawl site", _action_crawl),
     "4": ("Scrape URL", _action_scrape),
     "5": ("Regenerate HTML report", _action_report),
     "h": ("Help", _action_help),

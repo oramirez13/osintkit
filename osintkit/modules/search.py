@@ -38,7 +38,7 @@ PROVIDER_USER_AGENT = (
 
 @dataclass
 class Hit:
-    """Un resultado individual de busqueda."""
+    """A single search result."""
 
     title: str
     url: str
@@ -456,7 +456,7 @@ def run_search(
 
     for query in queries:
         if _expired():
-            warnings.append("time budget exhausted: se detuvo la busqueda antes de terminar.")
+            warnings.append("time budget exhausted: search stopped before completion.")
             break
         query_hits: list[Hit] = []
         for provider in providers:

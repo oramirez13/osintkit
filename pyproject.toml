@@ -1,7 +1,7 @@
 [project]
 name = "osintkit"
 version = "0.1.0"
-description = "Toolkit de OSINT y web scraping para fuentes publicas"
+description = "OSINT and web scraping toolkit for public sources"
 requires-python = ">=3.10"
 dependencies = [
     "httpx>=0.27",

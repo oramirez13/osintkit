@@ -59,7 +59,7 @@ def load_robots(fetcher: Fetcher, start_url: str, user_agent: str) -> RobotFileP
 
 
 def crawl(fetcher: Fetcher, config: CrawlConfig) -> list[CrawlResult]:
-    """BFS acotado. Devuelve una fila por página viyestada."""
+    """Scoped BFS. Returns one row per visited page."""
     start = _normalize(config.start_url)
     start_host = urlparse(start).netloc
     robots = load_robots(fetcher, start, config.user_agent) if config.respect_robots else None
@@ -77,7 +77,7 @@ def crawl(fetcher: Fetcher, config: CrawlConfig) -> list[CrawlResult]:
         if not _allowed(config.include, config.exclude, url):
             continue
 
-        # El rastreo gestiona robots.txt por su cuenta (con su propio UA), ayes
+        # Crawl manages robots.txt itself (con su propio UA), ayes
         # que evitamos la doble comprobacion del Fetcher.
         response = fetcher.get(url, use_cache=False, check_robots=False)
         soup = BeautifulSoup(response.text, "html.parser") if response.ok else None
