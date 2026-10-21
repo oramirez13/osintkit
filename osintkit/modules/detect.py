@@ -104,14 +104,44 @@ class Query:
 
 def detect_type(value: str) -> DataType:
     value = value.strip()
+    # Normalize profile URLs
+    if re.match(r'^https?://', value, re.I):
+        try:
+            from urllib.parse import urlsplit, unquote
+            parsed = urlsplit(value)
+            host = (parsed.hostname or '').lower()
+            path = unquote(parsed.path or '').strip('/')
+            if path and 'facebook.com' in host and path.lower().startswith('p/'):
+                slug = path.split('/')[1]
+                slug = re.sub(r'-?\d{6,}$', '', slug)
+                slug = slug.replace('-', ' ').replace('_', ' ').replace('.', ' ')
+                slug = re.sub(r'\s+', ' ', slug).strip()
+                if slug and len(slug.split()) >= 2:
+                    value = slug
+            elif path and 'instagram.com' in host and path.lower().split('/')[0] not in ('p','reels','stories'):
+                segs = [s for s in path.split('/') if s and s.lower() not in ('p','reels','stories','explore','accounts','tv')]
+                if segs:
+                    value = '@' + segs[0]
+            elif host in ('x.com','twitter.com'):
+                segs = [s for s in path.split('/') if s and s.lower() not in ('i','search','home','explore','notifications','messages','settings','compose')]
+                if segs:
+                    value = '@' + segs[0]
+            elif 'linkedin.com' in host and path.lower().startswith('in/'):
+                segs = path.split('/')
+                if len(segs)>=2 and segs[1]:
+                    value = segs[1].replace('-',' ').strip()
+            elif path and path.startswith('@'):
+                value = '@' + path[1:].split('/')[0]
+        except Exception:
+            pass
     if EMAIL_RE.match(value):
         return "email"
     if (
         value.lower().startswith(("http://", "https://"))
-        or "/" in value
+        or ("/" in value and _url_host(value))
         or _looks_like_bare_domain(value)
     ):
-        if _url_host(value):
+        if _url_host(value) and not re.match(r'^https?://', value, re.I):
             return "url"
     # Telefono explicito: prefijo + o separadores (espacios, guiones, parenteyess).
     has_phone_shaping = bool(re.search(r"[+\s().-]", value))
