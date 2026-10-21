@@ -1,4 +1,4 @@
-"""Pasyesve domain reconnaissance usando solo fuentes públicas.
+"""Passive domain reconnaissance using only public sources.
 
 No realiza escaneo de puertos ni pruebas de intruyesón: únicamente consulta
 DNS, certificado TLS, cabeceras HTTP y robots.txt, que son información

@@ -41,7 +41,7 @@ def _menu_table() -> None:
     table.add_column(style="bold cyan", justify="right")
     table.add_column(style="white")
     table.add_row("1", "Search for a person (name, phone, ID, email, nickname)")
-    table.add_row("2", "Pasyesve domain reconnaissance")
+    table.add_row("2", "Passive domain reconnaissance")
     table.add_row("3", "Crawl a site")
     table.add_row("4", "Scrape a URL with YAML config")
     table.add_row("5", "Regenerate HTML report from JSONL")
@@ -67,10 +67,14 @@ def _run(label: str, func: Callable[[list[str]], int], argv: list[str]) -> None:
 
 
 def _action_search() -> None:
-    value = Prompt.ask("[cyan]Data to search[/] (you can combine with '+' e.g: Name Surname+company)")
+    value = Prompt.ask(
+        "[cyan]Data to search[/] (you can combine with '+' e.g: Name Surname+company)"
+    )
     if not value.strip():
         return
-    extra = Prompt.ask("[cyan]Extra options[/] (e.g: '--browser --report', empty = none)", default="")
+    extra = Prompt.ask(
+        "[cyan]Extra options[/] (e.g: '--browser --report', empty = none)", default=""
+    )
     argv = ["search", value, *_as_kwargs(extra)]
     if "--report" not in argv:
         console.print("[dim]suggestion: add --report to generate HTML[/]")
@@ -81,21 +85,31 @@ def _action_domain() -> None:
     domains = Prompt.ask("[cyan]Domain(s)[/] (space separated)")
     if not domains.strip():
         return
-    extra = Prompt.ask("[cyan]Extra options[/] (e.g: '--report', empty = none)", default="")
-    _run("Domain reconnaissance", _dispatch, ["domain", *domains.split(), *_as_kwargs(extra)])
+    extra = Prompt.ask(
+        "[cyan]Extra options[/] (e.g: '--report', empty = none)", default=""
+    )
+    _run(
+        "Domain reconnaissance",
+        _dispatch,
+        ["domain", *domains.split(), *_as_kwargs(extra)],
+    )
 
 
 def _action_crawl() -> None:
     url = Prompt.ask("[cyan]Start URL[/]")
     if not url.strip():
         return
-    extra = Prompt.ask("[cyan]Extra options[/] (e.g: '--depth 2 --max-pages 30 --report')", default="")
+    extra = Prompt.ask(
+        "[cyan]Extra options[/] (e.g: '--depth 2 --max-pages 30 --report')", default=""
+    )
     _run("Site crawl", _dispatch, ["crawl", url, *_as_kwargs(extra)])
 
 
 def _action_scrape() -> None:
     config = Prompt.ask("[cyan]YAML path[/]", default="examples/example_scrape.yaml")
-    extra = Prompt.ask("[cyan]Extra options[/] (e.g: '--report', empty = none)", default="")
+    extra = Prompt.ask(
+        "[cyan]Extra options[/] (e.g: '--report', empty = none)", default=""
+    )
     _run("Scraping", _dispatch, ["scrape", config, *_as_kwargs(extra)])
 
 
@@ -135,7 +149,9 @@ def run_menu() -> int:
     while True:
         _print_banner()
         _menu_table()
-        choice = Prompt.ask("[bold cyan]Choose an option[/]", default="q").strip().lower()
+        choice = (
+            Prompt.ask("[bold cyan]Choose an option[/]", default="q").strip().lower()
+        )
         if choice in ("q", "quit", "exit", "salir"):
             console.print("[cyan]Goodbye.[/]")
             return 0
