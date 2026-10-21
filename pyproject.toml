@@ -1,0 +1,26 @@
+[project]
+name = "osintkit"
+version = "0.1.0"
+description = "Toolkit de OSINT y web scraping para fuentes publicas"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.27",
+    "beautifulsoup4>=4.12",
+    "dnspython>=2.4",
+    "rich>=13.0",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+xpath = ["lxml>=5.0"]
+browser = ["playwright>=1.40"]
+
+[project.scripts]
+osintkit = "osintkit.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["osintkit", "osintkit.modules"]

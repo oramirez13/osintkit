@@ -1,0 +1,30 @@
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Bytecode de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Empaquetado
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Resultados de osintkit
+output/*.jsonl
+output/*.csv
+output/*.html
+
+# Configuracion local
+.env
+*.local
+
+# Editores / SO
+.vscode/
+.idea/
+*.swp
+.DS_Store
