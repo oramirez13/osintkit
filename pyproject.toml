@@ -1,6 +1,6 @@
 [project]
 name = "osintkit"
-version = "0.1.0"
+version = "0.2.0"
 description = "OSINT and web scraping toolkit for public sources"
 requires-python = ">=3.10"
 dependencies = [
@@ -14,6 +14,7 @@ dependencies = [
 [project.optional-dependencies]
 xpath = ["lxml>=5.0"]
 browser = ["playwright>=1.40"]
+dev = ["pytest>=7.0", "black>=23.0", "ruff>=0.1"]
 
 [project.scripts]
 osintkit = "osintkit.cli:main"
