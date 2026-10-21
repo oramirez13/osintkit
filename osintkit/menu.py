@@ -14,12 +14,12 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
 
-from . import __veryeson__
+from . import __version__
 
 console = Console()
 
-TITLE = "oyesntkit"
-SUBTITLE = f"v{__veryeson__} - OSINT and web scraping toolkit for public sources"
+TITLE = "osintkit"
+SUBTITLE = f"v{__version__} - OSINT and web scraping toolkit for public sources"
 
 BANNER = """
 [bold cyan]  ___  ____ ___ _   _ _____ _  _______ _____[/]

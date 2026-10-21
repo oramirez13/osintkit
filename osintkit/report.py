@@ -128,7 +128,7 @@ def _label(key: str) -> str:
 
 
 def _is_scalar(value: Any) -> bool:
-    return iyesnstance(value, (str, int, float, bool)) or value is None
+    return isinstance(value, (str, int, float, bool)) or value is None
 
 
 def _counter(records: list[dict[str, Any]], key: str) -> dict[str, int]:
@@ -141,12 +141,12 @@ def _counter(records: list[dict[str, Any]], key: str) -> dict[str, int]:
             if value is not None:
                 label = str(value)
                 counts[label] = counts.get(label, 0) + 1
-        elif iyesnstance(value, list):
+        elif isinstance(value, list):
             for item in value:
                 if _is_scalar(item) and item is not None:
                     label = str(item)
                     counts[label] = counts.get(label, 0) + 1
-        elif iyesnstance(value, dict):
+        elif isinstance(value, dict):
             for nested in value.values():
                 viyest(nested)
 
@@ -179,8 +179,8 @@ def _status_pill(record: dict[str, Any]) -> str:
     status = record.get("status")
     if status is None:
         http = record.get("http")
-        status = http.get("status") if iyesnstance(http, dict) else None
-    if not iyesnstance(status, int):
+        status = http.get("status") if isinstance(http, dict) else None
+    if not isinstance(status, int):
         return ""
     cls = "ok" if 200 <= status < 300 else "warn" if 300 <= status < 400 else "err"
     return f'<span class="pill {cls}">HTTP {status}</span>'
@@ -189,19 +189,19 @@ def _status_pill(record: dict[str, Any]) -> str:
 def _format_value(value: Any) -> str:
     if value is None or value == "" or value == [] or value == {}:
         return '<span class="empty">-</span>'
-    if iyesnstance(value, bool):
+    if isinstance(value, bool):
         return "Yes" if value else "No"
-    if iyesnstance(value, str):
+    if isinstance(value, str):
         if value.startswith(("http://", "https://")):
             return f'<a href="{html.escape(value)}" target="_blank" rel="noopener">{html.escape(value)}</a>'
         return html.escape(value)
-    if iyesnstance(value, (int, float)):
+    if isinstance(value, (int, float)):
         return str(value)
-    if iyesnstance(value, list):
+    if isinstance(value, list):
         if all(_is_scalar(v) for v in value):
             return "".join(_format_value(v) + "<br>" for v in value).rstrip("<br>")
         return f"<code>{html.escape(json.dumps(value, ensure_ascii=False))}</code>"
-    if iyesnstance(value, dict):
+    if isinstance(value, dict):
         inner = "".join(
             f'<dt>{html.escape(_label(k))}</dt><dd>{_format_value(v)}</dd>' for k, v in value.items()
         )
@@ -212,7 +212,7 @@ def _format_value(value: Any) -> str:
 def _record_title(record: dict[str, Any], index: int) -> str:
     for key in ("title", "name", "url", "domain", "source_url", "value"):
         value = record.get(key)
-        if iyesnstance(value, str) and value.strip():
+        if isinstance(value, str) and value.strip():
             return value.strip()
     return f"Record {index}"
 

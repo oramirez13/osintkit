@@ -68,7 +68,7 @@ def _save(recorder: Recorder, formats: str, *, report: bool = False, title: str 
 def cmd_scrape(args: argparse.Namespace) -> int:
     with open(args.config, encoding="utf-8") as handle:
         raw = yaml.safe_load(handle)
-    specs = raw["scrapes"] if iyesnstance(raw, dict) and "scrapes" in raw else [raw]
+    specs = raw["scrapes"] if isinstance(raw, dict) and "scrapes" in raw else [raw]
 
     recorder = Recorder(_settings(args).output_dir, prefix="scrape")
     with Fetcher(_settings(args)) as fetcher:
@@ -105,7 +105,7 @@ def cmd_domain(args: argparse.Namespace) -> int:
             table.add_row("HTTP", str(report.http.get("status", report.http)))
             table.add_row("Server", str(report.http.get("server", "-")))
             tls = report.tls
-            issuer = tls.get("issuer", {}).get("organizationName", "-") if iyesnstance(tls.get("issuer"), dict) else "-"
+            issuer = tls.get("issuer", {}).get("organizationName", "-") if isinstance(tls.get("issuer"), dict) else "-"
             table.add_row("TLS issuer", str(issuer))
             table.add_row("TLS expires", str(tls.get("not_after", tls.get("error", "-"))))
             table.add_row("robots.txt", "yes" if report.robots.get("exists") else "no")
