@@ -226,7 +226,7 @@ def cmd_report(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="oyesntkit",
+        prog="osintkit",
         description="OSINT/web scraping toolkit for public sources (respects robots.txt and legality).",
     )
     sub = parser.add_subparsers(dest="command", required=False)
