@@ -27,13 +27,34 @@ console = Console()
 
 
 def _add_common(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--delay", type=float, default=1.0, help="seconds between requests (default: 1.0)")
-    parser.add_argument("--timeout", type=float, default=15.0, help="timeout in seconds (default: 15)")
-    parser.add_argument("--output", default="output", help="output folder (default: output)")
-    parser.add_argument("--formats", default="jsonl,csv", help="formats: jsonl,csv,json")
-    parser.add_argument("--report", action="store_true", help="also generate HTML report")
-    parser.add_argument("--no-robots", action="store_true", help="ignore robots.txt (requires explicit yeste authorization)")
-    parser.add_argument("--i-have-authorization", action="store_true", help="confirm you have permisyeson to ignore robots.txt")
+    parser.add_argument(
+        "--delay",
+        type=float,
+        default=1.0,
+        help="seconds between requests (default: 1.0)",
+    )
+    parser.add_argument(
+        "--timeout", type=float, default=15.0, help="timeout in seconds (default: 15)"
+    )
+    parser.add_argument(
+        "--output", default="output", help="output folder (default: output)"
+    )
+    parser.add_argument(
+        "--formats", default="jsonl,csv", help="formats: jsonl,csv,json"
+    )
+    parser.add_argument(
+        "--report", action="store_true", help="also generate HTML report"
+    )
+    parser.add_argument(
+        "--no-robots",
+        action="store_true",
+        help="ignore robots.txt (requires explicit yeste authorization)",
+    )
+    parser.add_argument(
+        "--i-have-authorization",
+        action="store_true",
+        help="confirm you have permisyeson to ignore robots.txt",
+    )
 
 
 def _settings(args: argparse.Namespace) -> Settings:
@@ -45,7 +66,9 @@ def _settings(args: argparse.Namespace) -> Settings:
         )
         raise SystemExit(2)
     if not respect:
-        console.print("[yellow]warning:[/] robots.txt will be ignored; use only with authorization.")
+        console.print(
+            "[yellow]warning:[/] robots.txt will be ignored; use only with authorization."
+        )
     return Settings(
         delay=args.delay,
         timeout=args.timeout,
@@ -54,7 +77,14 @@ def _settings(args: argparse.Namespace) -> Settings:
     )
 
 
-def _save(recorder: Recorder, formats: str, *, report: bool = False, title: str = "Informe OSINT", subtitle: str | None = None) -> None:
+def _save(
+    recorder: Recorder,
+    formats: str,
+    *,
+    report: bool = False,
+    title: str = "Informe OSINT",
+    subtitle: str | None = None,
+) -> None:
     paths = recorder.save_all([f.strip() for f in formats.split(",") if f.strip()])
     if report:
         report_path = os.path.join(recorder.output_dir, f"{recorder.prefix}.html")
@@ -105,12 +135,24 @@ def cmd_domain(args: argparse.Namespace) -> int:
             table.add_row("HTTP", str(report.http.get("status", report.http)))
             table.add_row("Server", str(report.http.get("server", "-")))
             tls = report.tls
-            issuer = tls.get("issuer", {}).get("organizationName", "-") if isinstance(tls.get("issuer"), dict) else "-"
+            issuer = (
+                tls.get("issuer", {}).get("organizationName", "-")
+                if isinstance(tls.get("issuer"), dict)
+                else "-"
+            )
             table.add_row("TLS issuer", str(issuer))
-            table.add_row("TLS expires", str(tls.get("not_after", tls.get("error", "-"))))
+            table.add_row(
+                "TLS expires", str(tls.get("not_after", tls.get("error", "-")))
+            )
             table.add_row("robots.txt", "yes" if report.robots.get("exists") else "no")
             console.print(table)
-    _save(recorder, args.formats, report=args.report, title="Domains report", subtitle=" ".join(args.domains))
+    _save(
+        recorder,
+        args.formats,
+        report=args.report,
+        title="Domains report",
+        subtitle=" ".join(args.domains),
+    )
     return 0
 
 
@@ -131,10 +173,22 @@ def cmd_crawl(args: argparse.Namespace) -> int:
     for column in ("depth", "status", "title", "links", "url"):
         table.add_column(column, overflow="fold")
     for row in results:
-        table.add_row(str(row.depth), str(row.status), row.title or "-", str(row.links_found), row.url)
+        table.add_row(
+            str(row.depth),
+            str(row.status),
+            row.title or "-",
+            str(row.links_found),
+            row.url,
+        )
         recorder.add(**row.__dict__)
     console.print(table)
-    _save(recorder, args.formats, report=args.report, title="Crawl report", subtitle=config.start_url)
+    _save(
+        recorder,
+        args.formats,
+        report=args.report,
+        title="Crawl report",
+        subtitle=config.start_url,
+    )
     return 0
 
 
@@ -247,10 +301,18 @@ def build_parser() -> argparse.ArgumentParser:
     p_crawl = sub.add_parser("crawl", help="scoped site crawl")
     p_crawl.add_argument("url", help="Start URL")
     p_crawl.add_argument("--depth", type=int, default=1, help="max depth (default: 1)")
-    p_crawl.add_argument("--max-pages", type=int, default=25, help="max pages (default: 25)")
-    p_crawl.add_argument("--any-host", action="store_true", help="allow leaving initial host")
-    p_crawl.add_argument("--include", action="append", help="substring that must be in URL")
-    p_crawl.add_argument("--exclude", action="append", help="substring forbidden in URL")
+    p_crawl.add_argument(
+        "--max-pages", type=int, default=25, help="max pages (default: 25)"
+    )
+    p_crawl.add_argument(
+        "--any-host", action="store_true", help="allow leaving initial host"
+    )
+    p_crawl.add_argument(
+        "--include", action="append", help="substring that must be in URL"
+    )
+    p_crawl.add_argument(
+        "--exclude", action="append", help="substring forbidden in URL"
+    )
     _add_common(p_crawl)
     p_crawl.set_defaults(func=cmd_crawl)
 
@@ -259,21 +321,62 @@ def build_parser() -> argparse.ArgumentParser:
     p_report.add_argument("--out", help="output HTML path")
     p_report.add_argument("--title", help="report title")
     p_report.add_argument("--subtitle", help="subreport title")
-    p_report.add_argument("--output", default="output", help="carpeta de salida yes no se usa --out")
+    p_report.add_argument(
+        "--output", default="output", help="carpeta de salida yes no se usa --out"
+    )
     p_report.set_defaults(func=cmd_report)
 
-    p_search = sub.add_parser("search", help="search for name, phone, ID, email, or nickname")
-    p_search.add_argument("value", help="data to search; combine with '+' (e.g: 'Name Surname+company')")
-    p_search.add_argument("--type", choices=["name", "phone", "id", "email", "username"], help="force data type")
-    p_search.add_argument("--providers", default="searxng", help="search engines: searxng,duckduckgo,bing,google (default: searxng)")
-    p_search.add_argument("--browser", action="store_true", help="use real browser (Playwright); avoids blocks and enables SearXNG")
-    p_search.add_argument("--headful", action="store_true", help="show browser (only with --browser)")
-    p_search.add_argument("--per-query", type=int, default=10, help="results per query (default: 10)")
-    p_search.add_argument("--budget", type=float, default=180.0, help="time time limit in seconds for entire search (default: 180)")
-    p_search.add_argument("--no-social", action="store_true", help="do not check social media profiles")
-    p_search.add_argument("--no-registries", action="store_true", help="do not query public registries (crt.sh)")
-    p_search.add_argument("--no-fallback", action="store_true", help="no reintentar con Bing yes el buscador principal falla")
-    p_search.add_argument("--no-strict", action="store_true", help="do not filter irrelevant results (SEO/generic)")
+    p_search = sub.add_parser(
+        "search", help="search for name, phone, ID, email, nickname, or website"
+    )
+    p_search.add_argument(
+        "value", help="data to search; combine with '+' (e.g: 'Name Surname+company')"
+    )
+    p_search.add_argument(
+        "--type",
+        choices=["name", "phone", "id", "email", "username", "url"],
+        help="force data type",
+    )
+    p_search.add_argument(
+        "--providers",
+        default="searxng",
+        help="search engines: searxng,duckduckgo,bing,google (default: searxng)",
+    )
+    p_search.add_argument(
+        "--browser",
+        action="store_true",
+        help="use real browser (Playwright); avoids blocks and enables SearXNG",
+    )
+    p_search.add_argument(
+        "--headful", action="store_true", help="show browser (only with --browser)"
+    )
+    p_search.add_argument(
+        "--per-query", type=int, default=10, help="results per query (default: 10)"
+    )
+    p_search.add_argument(
+        "--budget",
+        type=float,
+        default=180.0,
+        help="time time limit in seconds for entire search (default: 180)",
+    )
+    p_search.add_argument(
+        "--no-social", action="store_true", help="do not check social media profiles"
+    )
+    p_search.add_argument(
+        "--no-registries",
+        action="store_true",
+        help="do not query public registries (crt.sh)",
+    )
+    p_search.add_argument(
+        "--no-fallback",
+        action="store_true",
+        help="no reintentar con Bing yes el buscador principal falla",
+    )
+    p_search.add_argument(
+        "--no-strict",
+        action="store_true",
+        help="do not filter irrelevant results (SEO/generic)",
+    )
     _add_common(p_search)
     p_search.set_defaults(func=cmd_search)
 

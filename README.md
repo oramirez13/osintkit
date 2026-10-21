@@ -48,7 +48,8 @@ osintkit menu                # same, explicit
 ```
 
 The menu offers:
-1. Search for a person (name, phone, ID, email, nickname)
+
+1. Search public sources by name, phone, ID, email, nickname, or website/domain
 2. Passive reconnaissance of a domain
 3. Crawl a site
 4. Scrape a URL with a YAML config
@@ -74,8 +75,10 @@ osintkit crawl https://example.com --depth 2 --max-pages 50 \
 # 4. Regenerate report from saved results
 osintkit report output/domain_20261020-035751.jsonl --title "My report"
 
-# 5. Search for a person by data (name, phone, ID, email, @nick)
+# 5. Search public sources by name, phone, ID, email, @nick, or website
 osintkit search "John Doe" --browser --report
+osintkit search https://example.com/about --browser --report
+osintkit search example.com --type url --browser --report
 
 # 6. Combine multiple data points with '+' (name + company/second data)
 osintkit search "John Doe+Acme" --browser --report
@@ -102,8 +105,8 @@ YAML format:
 ```yaml
 scrapes:
   - url: "https://site.com/list"
-    container: "article.item"   # repeated block (one row per match)
-    mode: css                    # css (default) or xpath
+    container: "article.item" # repeated block (one row per match)
+    mode: css # css (default) or xpath
     fields:
       - name: title
         selector: "h2 a"
@@ -112,5 +115,5 @@ scrapes:
         attr: href
       - name: tags
         selector: ".tag"
-        all: true                # list of all matches
+        all: true # list of all matches
 ```

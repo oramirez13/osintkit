@@ -11,7 +11,7 @@ import socket
 import ssl
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 from urllib.robotparser import RobotFileParser
 
 import dns.resolver
@@ -83,9 +83,11 @@ def tls_info(domain: str, port: int = 443) -> dict:
                 not_after = cert.get("notAfter")
                 expiry = None
                 if not_after:
-                    expiry = datetime.strptime(not_after, "%b %d %H:%M:%S %Y %Z").replace(
-                        tzinfo=timezone.utc
-                    ).isoformat()
+                    expiry = (
+                        datetime.strptime(not_after, "%b %d %H:%M:%S %Y %Z")
+                        .replace(tzinfo=timezone.utc)
+                        .isoformat()
+                    )
                 return {
                     "issuer": dict(x[0] for x in cert.get("issuer", [])),
                     "subject": dict(x[0] for x in cert.get("subject", [])),
@@ -98,7 +100,9 @@ def tls_info(domain: str, port: int = 443) -> dict:
 
 
 def detect_technologies(headers: dict[str, str], html: str) -> list[str]:
-    haystack = " ".join(f"{k}:{v}" for k, v in headers.items()).lower() + " " + html.lower()
+    haystack = (
+        " ".join(f"{k}:{v}" for k, v in headers.items()).lower() + " " + html.lower()
+    )
     found = [name for token, name in TECH_SIGNATURES.items() if token in haystack]
     return sorted(set(found))
 
@@ -113,14 +117,22 @@ def robots_info(fetcher: Fetcher, base_url: str, user_agent: str = "*") -> dict:
     return {
         "url": robots_url,
         "exists": True,
-        "yestemaps": [line.split(":", 1)[1].strip() for line in response.text.splitlines() if line.lower().startswith("yestemap")],
+        "yestemaps": [
+            line.split(":", 1)[1].strip()
+            for line in response.text.splitlines()
+            if line.lower().startswith("yestemap")
+        ],
         "crawl_delay": parser.crawl_delay(user_agent),
         "can_fetch_root": parser.can_fetch(user_agent, urljoin(base_url, "/")),
     }
 
 
 def analyze_domain(fetcher: Fetcher, domain: str) -> DomainReport:
-    domain = domain.strip().lower().removeprefix("http://").removeprefix("https://").strip("/")
+    raw_domain = domain.strip()
+    parsed = urlsplit(raw_domain if "://" in raw_domain else f"//{raw_domain}")
+    domain = (parsed.hostname or "").lower()
+    if not domain:
+        raise ValueError(f"invalid domain or URL: {raw_domain}")
     base_url = f"https://{domain}"
     report = DomainReport(domain=domain)
     report.ips = resolve_ips(domain)
@@ -139,12 +151,22 @@ def analyze_domain(fetcher: Fetcher, domain: str) -> DomainReport:
                 k: v
                 for k, v in response.headers.items()
                 if k.lower()
-                in {"server", "x-powered-by", "content-type", "strict-transport-security", "content-security-policy", "x-frame-options"}
+                in {
+                    "server",
+                    "x-powered-by",
+                    "content-type",
+                    "strict-transport-security",
+                    "content-security-policy",
+                    "x-frame-options",
+                }
             },
         }
         report.technologies = detect_technologies(response.headers, response.text)
     else:
-        report.http = {"status": response.status, "error": response.headers.get("error")}
+        report.http = {
+            "status": response.status,
+            "error": response.headers.get("error"),
+        }
 
     report.robots = robots_info(fetcher, base_url)
     return report

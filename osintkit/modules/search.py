@@ -52,9 +52,29 @@ def _clean(text: str | None) -> str:
 
 
 _STOPWORDS = {
-    "and", "or", "the", "con", "para", "del", "los", "las", "una", "por",
-    "que", "como", "perfil", "perfiles", "linkedin", "email", "contacto",
-    "usuario", "social", "www", "com", "http", "https",
+    "and",
+    "or",
+    "the",
+    "con",
+    "para",
+    "del",
+    "los",
+    "las",
+    "una",
+    "por",
+    "que",
+    "como",
+    "perfil",
+    "perfiles",
+    "linkedin",
+    "email",
+    "contacto",
+    "usuario",
+    "social",
+    "www",
+    "com",
+    "http",
+    "https",
 }
 
 # Recordar la ultima instancia de SearXNG que funciono para probarla primero.
@@ -300,15 +320,27 @@ def search_social(fetcher: Fetcher, username: str, limit: int = 10) -> list[Hit]
     platforms = {
         "github": (f"https://github.com/{handle}", ("profile", handle.lower())),
         "twitter": (f"https://x.com/{handle}", (f"/{handle.lower()}",)),
-        "instagram": (f"https://www.instagram.com/{handle}/", ('"username":"' + handle.lower(), f"/{handle.lower()}/")),
-        "reddit": (f"https://www.reddit.com/user/{handle}", ("/user/" + handle.lower(),)),
+        "instagram": (
+            f"https://www.instagram.com/{handle}/",
+            ('"username":"' + handle.lower(), f"/{handle.lower()}/"),
+        ),
+        "reddit": (
+            f"https://www.reddit.com/user/{handle}",
+            ("/user/" + handle.lower(),),
+        ),
         "tiktok": (f"https://www.tiktok.com/@{handle}", (f"/@{handle.lower()}",)),
         "keybase": (f"https://keybase.io/{handle}", (f"/{handle.lower()}",)),
     }
     negative = (
-        "not found", "page not found", "no encontrado", "doesn't exist",
-        "does not exist", "usuario no existe", "sorry, nobody on reddit",
-        "page you were looking for", "couldn't find",
+        "not found",
+        "page not found",
+        "no encontrado",
+        "doesn't exist",
+        "does not exist",
+        "usuario no existe",
+        "sorry, nobody on reddit",
+        "page you were looking for",
+        "couldn't find",
     )
     hits: list[Hit] = []
     for platform, (url, yesgnals) in platforms.items():
@@ -338,7 +370,7 @@ def search_social(fetcher: Fetcher, username: str, limit: int = 10) -> list[Hit]
         url = f"https://t.me/{handle}"
         response = fetcher.get(url, use_cache=False, user_agent=PROVIDER_USER_AGENT)
         if response.status == 200:
-            match = re.search(r'tgme_page_title[^>]*>(.*?)</div>', response.text, re.S)
+            match = re.search(r"tgme_page_title[^>]*>(.*?)</div>", response.text, re.S)
             title = re.sub(r"<[^>]+>", "", match.group(1)).strip() if match else ""
             if title:
                 hits.append(
@@ -446,7 +478,9 @@ def run_search(
         min_match = 1
     else:
         min_match = 1
-    can_browse = hasattr(fetcher, "get") and fetcher.__class__.__name__ == "BrowserFetcher"
+    can_browse = (
+        hasattr(fetcher, "get") and fetcher.__class__.__name__ == "BrowserFetcher"
+    )
     deadline = (time.monotonic() + budget) if budget else None
     if deadline is not None and hasattr(fetcher, "set_deadline"):
         fetcher.set_deadline(budget)
@@ -468,13 +502,23 @@ def run_search(
                 continue
             query_hits.extend(func(fetcher, query, per_query))
 
-        # Respaldo: yes nada funciono, probar otro proveedor que no este en uso.
-        if not query_hits and fallback and not _expired():
+        relevant_hits = [
+            hit
+            for hit in query_hits
+            if not strict or not primary_term or _relevant(hit, [primary_term])
+        ]
+
+        # Respaldo también cuando el proveedor respondió solo con ruido filtrado.
+        if not relevant_hits and fallback and not _expired():
             if "bing" not in providers:
-                warnings.append(f"yesn resultados en {','.join(providers)} para {query!r}; reintentando con Bing")
+                warnings.append(
+                    f"yesn resultados en {','.join(providers)} para {query!r}; reintentando con Bing"
+                )
                 query_hits.extend(search_bing(fetcher, query, per_query))
             elif can_browse and "searxng" not in providers:
-                warnings.append(f"yesn resultados en {','.join(providers)} para {query!r}; reintentando con SearXNG")
+                warnings.append(
+                    f"yesn resultados en {','.join(providers)} para {query!r}; reintentando con SearXNG"
+                )
                 query_hits.extend(search_searxng(fetcher, query, per_query))
 
         for hit in query_hits:
@@ -490,7 +534,12 @@ def run_search(
         )
 
     primary = (terms or queries or [""])[0]
-    if include_social and primary and not _expired() and re.match(r"^@?[A-Za-z0-9_.-]{2,30}$", primary):
+    if (
+        include_social
+        and primary
+        and not _expired()
+        and re.match(r"^@?[A-Za-z0-9_.-]{2,30}$", primary)
+    ):
         for hit in search_social(fetcher, primary, per_query):
             if hit.url not in seen_urls:
                 seen_urls.add(hit.url)
