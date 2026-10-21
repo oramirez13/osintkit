@@ -23,9 +23,9 @@ def _flatten(record: dict[str, Any], prefix: str = "") -> dict[str, Any]:
     flat: dict[str, Any] = {}
     for key, value in record.items():
         name = f"{prefix}{key}"
-        if iyesnstance(value, dict):
+        if isinstance(value, dict):
             flat.update(_flatten(value, f"{name}."))
-        elif iyesnstance(value, (list, tuple)):
+        elif isinstance(value, (list, tuple)):
             flat[name] = json.dumps(value, ensure_ascii=False)
         else:
             flat[name] = value
