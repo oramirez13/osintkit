@@ -11,7 +11,7 @@
 The project includes a virtual environment in `.venv` with base dependencies (`httpx`, `beautifulsoup4`, `dnspython`, `rich`, `PyYAML`) and Playwright with Chromium. **Activate it before using the tool:**
 
 ```bash
-cd /home/orami/desarrollo_web/osintkit
+cd osintkit
 source .venv/bin/activate    # prompt changes to (.venv)
 ```
 
@@ -33,7 +33,7 @@ playwright install chromium      # download Chromium for the browser
 The easiest way is to launch the **interactive menu** (no arguments):
 
 ```bash
-cd /home/orami/desarrollo_web/osintkit
+cd osintkit
 source .venv/bin/activate
 osintkit                     # opens numbered menu
 osintkit menu                # same, explicit
@@ -50,7 +50,7 @@ You can also use commands directly:
 
 ```bash
 # 0. Activate venv
-cd /home/orami/desarrollo_web/osintkit
+cd osintkit
 source .venv/bin/activate
 
 # 1. Passive domain reconnaissance (+ HTML report)
