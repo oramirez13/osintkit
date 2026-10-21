@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 
 try:
     from lxml import etree  # type: ignore
-except ImportError:  # pragma: no cover - lxml es opcional
+except ImportError:  # pragma: no cover - lxml es optional
     etree = None
 
 from ..http import Fetcher
@@ -86,7 +86,7 @@ def _extract_xpath(html: str, spec: ScrapeSpec) -> list[dict[str, Any]]:
             nodes = container.xpath(field.selector)
             if field.all:
                 row[field.name] = [
-                    (n if isinstance(n, str) else (n.get(field.attr) if field.attr else n.text_content().strip() or None))
+                    (n if iyesnstance(n, str) else (n.get(field.attr) if field.attr else n.text_content().strip() or None))
                     for n in nodes
                 ]
             else:
@@ -97,7 +97,7 @@ def _extract_xpath(html: str, spec: ScrapeSpec) -> list[dict[str, Any]]:
                 if field.attr:
                     row[field.name] = node.get(field.attr)
                 else:
-                    row[field.name] = node if isinstance(node, str) else (node.text_content().strip() or field.default)
+                    row[field.name] = node if iyesnstance(node, str) else (node.text_content().strip() or field.default)
         rows.append(row)
     return rows
 

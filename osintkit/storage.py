@@ -1,4 +1,4 @@
-"""Almacenamiento y exportación de resultados (JSONL y CSV)."""
+"""Result storage and export (JSONL and CSV)."""
 
 from __future__ import annotations
 
@@ -23,9 +23,9 @@ def _flatten(record: dict[str, Any], prefix: str = "") -> dict[str, Any]:
     flat: dict[str, Any] = {}
     for key, value in record.items():
         name = f"{prefix}{key}"
-        if isinstance(value, dict):
+        if iyesnstance(value, dict):
             flat.update(_flatten(value, f"{name}."))
-        elif isinstance(value, (list, tuple)):
+        elif iyesnstance(value, (list, tuple)):
             flat[name] = json.dumps(value, ensure_ascii=False)
         else:
             flat[name] = value
@@ -33,7 +33,7 @@ def _flatten(record: dict[str, Any], prefix: str = "") -> dict[str, Any]:
 
 
 class Recorder:
-    """Acumula registros y permite exportarlos a varios formatos."""
+    """Accumulates records and allows exporting to multiple formats."""
 
     def __init__(self, output_dir: str = "output", prefix: str = "run") -> None:
         self.output_dir = ensure_dir(output_dir)

@@ -1,283 +1,108 @@
 # osintkit
 
-**osintkit** es un toolkit de **OSINT y web scraping** en Python para recolectar
-**informacion publica** de forma respetuosa: respeta `robots.txt`, aplica
-*rate limiting*, deduplica y exporta a JSONL/CSV/HTML.
+**osintkit** is an **OSINT and web scraping** toolkit in Python for collecting **public information** responsibly: it respects `robots.txt`, applies rate limiting, deduplicates results, and exports to JSONL/CSV/HTML.
 
-> Uso responsable: recolecta solo datos publicos, respeta los terminos de servicio
-> de cada sitio, la legislacion de proteccion de datos y el `robots.txt`. No incluye
-> escaneo de puertos, fuerza bruta ni pruebas de intrusion.
+> Responsible use: only collect public data, respect each site's terms of service, data protection laws, and `robots.txt`. It does not include port scanning, brute force, or intrusion testing.
 >
-> **Aviso legal:** los resultados pueden contener datos personales (nombres,
-> telefonos, correos, identificaciones). Tratalos solo con una **base legal**
-> (consentimiento, interes legitimo o fin periodistico/investigativo), conforme al
-> RGPD y a la normativa local (p. ej. Ley 8968 en Costa Rica). Aplica minimizacion
-> y elimina los archivos de `output/` cuando dejen de ser necesarios.
+> **Legal notice:** results may contain personal data (names, phone numbers, emails, IDs). Only process them with a **legal basis** (consent, legitimate interest, or journalistic/investigative purpose), in compliance with GDPR and local regulations (e.g. Costa Rica's Law 8968). Apply data minimization and delete files in `output/` when no longer needed.
 
-## Instalacion
+## Installation
 
-El proyecto ya incluye un entorno virtual en `.venv` con todas las dependencias
-base (`httpx`, `beautifulsoup4`, `dnspython`, `rich`, `PyYAML`) y Playwright con
-Chromium. **Activalo antes de usar la herramienta:**
+The project includes a virtual environment in `.venv` with base dependencies (`httpx`, `beautifulsoup4`, `dnspython`, `rich`, `PyYAML`) and Playwright with Chromium. **Activate it before using the tool:**
 
 ```bash
-cd /home/kali/osintkit
-source .venv/bin/activate    # el prompt cambia a (.venv)
+cd /home/orami/desarrollo_web/osintkit
+source .venv/bin/activate    # prompt changes to (.venv)
 ```
 
-Con el venv activo puedes usar el comando `osintkit` o `python -m osintkit`.
+With the venv active, you can use `osintkit` or `python -m osintkit`.
 
-Si necesitas recrearlo desde cero:
+If you need to recreate it from scratch:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e .                 # dependencias base
-pip install -e ".[browser]"      # opcional: navegador Playwright (busquedas fiables)
-pip install -e ".[xpath]"        # opcional: soporte XPath via lxml
-playwright install chromium      # descarga Chromium para el navegador
+pip install -e .                 # base dependencies
+pip install -e ".[browser]"      # optional: Playwright browser (more reliable searches)
+pip install -e ".[xpath]"        # optional: XPath support via lxml
+playwright install chromium      # download Chromium for the browser
 ```
 
-## Inicio rapido
+## Quick start
 
-La forma mas sencilla es lanzar el **menu interactivo** (sin argumentos):
+The easiest way is to launch the **interactive menu** (no arguments):
 
 ```bash
-cd /home/kali/osintkit
-source .venv/bin/activate    # recuerda activar el venv
-osintkit                     # abre el menu numerado
-osintkit menu                # idem, explicito
+cd /home/orami/desarrollo_web/osintkit
+source .venv/bin/activate
+osintkit                     # opens numbered menu
+osintkit menu                # same, explicit
 ```
 
-El menu ofrece:
-1. Buscar una persona (nombre, telefono, id, email, nickname)
-2. Reconocimiento pasivo de un dominio
-3. Rastrear un sitio (crawl)
-4. Scrapear una URL con un YAML
-5. Regenerar informe HTML desde un JSONL
+The menu offers:
+1. Search for a person (name, phone, ID, email, nickname)
+2. Passive reconnaissance of a domain
+3. Crawl a site
+4. Scrape a URL with a YAML config
+5. Regenerate HTML report from JSONL
 
-Tambien puedes usar los comandos directamente:
+You can also use commands directly:
 
 ```bash
-# 0. Activar el venv
-cd /home/kali/osintkit
+# 0. Activate venv
+cd /home/orami/desarrollo_web/osintkit
 source .venv/bin/activate
 
-# 1. Reconocimiento pasivo de dominios (+ informe HTML)
-osintkit domain ejemplo.com otro.org --report
+# 1. Passive domain reconnaissance (+ HTML report)
+osintkit domain example.com another.org --report
 
-# 2. Scraping configurable por selectores CSS/XPath
+# 2. Configurable scraping via CSS/XPath selectors
 osintkit scrape examples/example_scrape.yaml --report
 
-# 3. Rastreo acotado y respetuoso de un sitio
-osintkit crawl https://ejemplo.com --depth 2 --max-pages 50 \
+# 3. Respectful, scoped site crawl
+osintkit crawl https://example.com --depth 2 --max-pages 50 \
   --include /blog/ --exclude /login --report
 
-# 4. Regenerar un informe desde resultados ya guardados
-osintkit report output/domain_20261020-035751.jsonl --title "Mi informe"
+# 4. Regenerate report from saved results
+osintkit report output/domain_20261020-035751.jsonl --title "My report"
 
-# 5. Buscar una persona por dato (nombre, telefono, identificacion, email, @nick)
-osintkit search "Juan Perez Gomez" --browser --report
+# 5. Search for a person by data (name, phone, ID, email, @nick)
+osintkit search "John Doe" --browser --report
 
-# 6. Combinar varios datos con '+' (nombre + empresa/segundo dato)
-osintkit search "María Fernanda Cordero Rojas+G4S" --browser --report
+# 6. Combine multiple data points with '+' (name + company/second data)
+osintkit search "John Doe+Acme" --browser --report
 
-# 7. Ver la ayuda de cualquier comando
+# 7. View help for any command
 osintkit --help
 osintkit domain --help
 ```
 
-Los resultados (JSONL/CSV/HTML) se guardan en la carpeta `output/`. Para abrir un
-informe: `xdg-open output/<nombre>.html`.
+Results (JSONL/CSV/HTML) are saved in the `output/` folder. To open a report: `xdg-open output/<name>.html`.
 
-> La tabla de resultados en pantalla solo se muestra en una terminal con TTY; en
-> entornos sin TTY los archivos de `output/` se generan igualmente.
+> The results table on screen is only shown in a TTY terminal; in non-TTY environments, files in `output/` are still generated.
 
-## Uso
+## Usage
 
-### 1. Scraping configurable (por selectores CSS/XPath)
+### 1. Configurable scraping (CSS/XPath selectors)
 
 ```bash
 osintkit scrape examples/example_scrape.yaml
 ```
 
-Formato YAML:
+YAML format:
 
 ```yaml
 scrapes:
-  - url: "https://sitio.com/listado"
-    container: "article.item"   # bloque repetido (una fila por match)
-    mode: css                    # css (default) o xpath
+  - url: "https://site.com/list"
+    container: "article.item"   # repeated block (one row per match)
+    mode: css                    # css (default) or xpath
     fields:
-      - name: titulo
+      - name: title
         selector: "h2 a"
-      - name: enlace
+      - name: link
         selector: "h2 a"
         attr: href
-      - name: etiquetas
+      - name: tags
         selector: ".tag"
-        all: true                # lista con todos los matches
+        all: true                # list of all matches
 ```
-
-### 2. Reconocimiento pasivo de dominios
-
-```bash
-osintkit domain ejemplo.com otro.org
-```
-
-Recolecta DNS (A/AAAA, MX, NS, TXT), certificado TLS, cabeceras HTTP,
-tecnologias detectadas y estado de `robots.txt`. Solo informacion publica.
-
-### 3. Rastreo acotado
-
-```bash
-osintkit crawl https://ejemplo.com --depth 2 --max-pages 50 \
-  --include /blog/ --exclude /login
-```
-
-### 4. Regenerar un informe HTML
-
-```bash
-osintkit report output/crawl_20260101-120000.jsonl --title "Rastreo ejemplo.com"
-```
-
-### 5. Buscar una persona por dato (nombre, telefono, identificacion, email o nickname)
-
-```bash
-# Deteccion automatica del tipo de dato
-osintkit search "Juan Perez Gomez" --browser
-osintkit search "+506 8888 9999" --browser
-osintkit search "@torvalds"
-osintkit search "juan@mail.com"
-
-# Combinar varios datos con '+' (se buscan juntos y por separado)
-osintkit search "María Fernanda Cordero Rojas+G4S" --browser --report
-
-# Forzar el tipo y elegir buscadores
-osintkit search "123456789" --type id
-osintkit search "Juan Perez" --providers searxng,bing --browser --report
-```
-
-El comando detecta automaticamente si el dato es un **nombre**, **telefono**,
-**identificacion**, **email** o **nickname**, genera variantes de consulta y
-rastrea:
-
-- Buscadores: `searxng` (default), `duckduckgo`, `bing`, `google`.
-- Redes sociales publicas por nickname: GitHub, X, Instagram, Reddit, TikTok,
-  Telegram, Keybase (omite el sitio si el perfil no existe).
-- Registros publicos: subdominios via `crt.sh` cuando el dato es dominio/email.
-
-**Buscador con navegador real (`--browser`).** Los buscadores HTML bloquean o
-degradan las respuestas para clientes HTTP simples (DuckDuckGo responde `202`,
-Bing devuelve ruido). Con `--browser` se usa **Playwright** con un Chromium real,
-lo que permite consultar **SearXNG** (meta-buscador, proveedor por defecto) y
-obtener resultados fiables. Requiere haber ejecutado `playwright install chromium`
-(ya hecho en `.venv`). Puedes fijar instancias con la variable
-`SEARXNG_INSTANCES` (separadas por coma).
-
-Banderas:
-
-| Bandera | Descripcion |
-| --- | --- |
-| `--type name,phone,id,email,username` | fuerza el tipo de dato |
-| `--browser` | usa un navegador real (Playwright); activa SearXNG |
-| `--headful` | muestra el navegador (solo con `--browser`) |
-| `--providers searxng,duckduckgo,bing,google` | buscadores a usar (default: searxng) |
-| `--per-query N` | resultados por consulta (default: 10) |
-| `--no-social` | no comprobar perfiles en redes sociales |
-| `--no-registries` | no consultar registros publicos (crt.sh) |
-| `--no-fallback` | no reintentar con otro buscador si el principal falla |
-| `--no-strict` | no filtrar resultados irrelevantes (SEO/genericos) |
-
-Google usa la API Programmable Search; define `GOOGLE_CSE_KEY` y `GOOGLE_CSE_CX`
-en el entorno para activarlo (si no estan, se omite silenciosamente).
-
-> Algunos buscadores pueden devolver CAPTCHA o bloquear peticiones; el toolkit
-> aplica pausas y reintentos, pero no evita esos controles. Usa `--delay` alto
-> para no saturar. Con `--browser` la fiabilidad mejora notablemente.
-
-
-## Informe HTML
-
-Cualquiera de los comandos puede generar un informe HTML autocontenido
-(sin dependencias externas, con estilos embebidos) anadiendo `--report`:
-
-```bash
-osintkit domain ejemplo.com --report
-# -> output/domain_<fecha>.html
-```
-
-El informe incluye un **resumen agregado** (tarjetas con totales, graficos de
-barras por estado HTTP, tecnologias y registros por dominio), la tabla de
-registros, una seccion por registro y el JSON crudo plegable. Se genera junto a
-los exportes JSONL/CSV.
-
-Para regenerar un informe a partir de un JSONL ya existente:
-
-```bash
-osintkit report output/domain_20260101-120000.jsonl --title "Mi informe"
-# --out ruta.html  --subtitle "texto"  --output carpeta
-```
-
-## Opciones comunes
-
-| Opcion | Descripcion |
-| --- | --- |
-| `--delay 1.5` | segundos entre peticiones |
-| `--timeout 20` | timeout por peticion |
-| `--output carpeta` | carpeta de salida |
-| `--formats jsonl,csv,json` | formatos de exportacion |
-| `--report` | generar tambien un informe HTML autocontenido |
-| `--no-robots` | ignorar robots.txt (requiere `--i-have-authorization`) |
-| `--i-have-authorization` | confirma que tienes permiso del sitio para ignorar robots.txt |
-
-## Estructura
-
-```
-osintkit/
-  __init__.py       version del paquete
-  __main__.py       entrypoint (python -m osintkit)
-  config.py         ajustes y user-agent
-  http.py           cliente con rate limit, reintentos y cache
-  browser.py        fetcher con navegador real (Playwright) para buscadores
-  storage.py        grabadora JSONL/CSV/JSON
-  report.py         informe HTML autocontenido
-  cli.py            interfaz de linea de comandos
-  menu.py           menu interactivo numerado
-  modules/
-    scrape.py       scraping declarativo
-    domain.py       reconocimiento pasivo
-    crawl.py        rastreo acotado y respetuoso
-    detect.py       deteccion automatica del tipo de dato y consultas '+'
-    search.py       busqueda por nombre/telefono/id/email/nickname
-```
-
-## Seguridad y legalidad
-
-Medidas implementadas:
-
-- **`robots.txt` obligatorio por defecto**: el cliente HTTP comprueba `robots.txt`
-  del host (con cache) antes de cada peticion en `scrape`, `domain` y `search`.
-  Para ignorarlo hay que pasar `--no-robots` **y** `--i-have-authorization`.
-- **Rate limiting** (`--delay`) y reintentos con backoff.
-- **Proxy seguro**: se rechazan proxies `http://` salvo
-  `OSINTKIT_ALLOW_INSECURE_PROXY=1`.
-- **Perfiles sociales sin falsos positivos**: solo se reporta un perfil con
-  evidencia positiva especifica de la plataforma (no basta un HTTP 200).
-- **Identificaciones**: `--type id` avisa del riesgo y de la necesidad de base legal.
-- **Sin exposición de secretos**: las API keys se leen del entorno y nunca se
-  escriben en salidas; TLS se valida por defecto.
-- **Aviso legal en cada informe** y `html.escape` en todo el HTML (sin XSS).
-
-Recomendaciones de uso responsable:
-
-- Usa `--delay` alto y limita los volumenes; no satures los sitios.
-- Revisa los ToS de cada sitio e instancia de SearXNG.
-- Minimiza y elimina los datos de `output/` cuando ya no los necesites.
-
-## Roadmap
-
-- Fuentes OSINT adicionales (RSS, sitemaps, Whois, crt.sh para subdominios).
-- Enriquecimiento con `commoncrawl` / `wayback`.
-- Soporte de plugins para nuevos modulos.
-- Mas instancias SearXNG y proveedores con API (Brave, SerpAPI).

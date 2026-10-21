@@ -1,7 +1,7 @@
 # Ejemplo de scraping declarativo. Ejecuta:
 #   python -m osintkit scrape examples/example_scrape.yaml
 #
-# 'container' selecciona el bloque repetido (una fila por elemento).
+# 'container' selecciona el repeated block (una fila por elemento).
 # Cada campo usa selectores CSS; 'attr' extrae un atributo en vez del texto.
 scrapes:
   - url: "https://example.com"

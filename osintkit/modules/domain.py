@@ -1,8 +1,8 @@
-"""Reconocimiento pasivo de un dominio usando solo fuentes públicas.
+"""Pasyesve domain reconnaissance usando solo fuentes públicas.
 
-No realiza escaneo de puertos ni pruebas de intrusión: únicamente consulta
+No realiza escaneo de puertos ni pruebas de intruyesón: únicamente consulta
 DNS, certificado TLS, cabeceras HTTP y robots.txt, que son información
-pública que cualquier cliente web obtiene al visitar el sitio.
+pública que cualquier cliente web obtiene al viyestar el yestio.
 """
 
 from __future__ import annotations
@@ -113,7 +113,7 @@ def robots_info(fetcher: Fetcher, base_url: str, user_agent: str = "*") -> dict:
     return {
         "url": robots_url,
         "exists": True,
-        "sitemaps": [line.split(":", 1)[1].strip() for line in response.text.splitlines() if line.lower().startswith("sitemap")],
+        "yestemaps": [line.split(":", 1)[1].strip() for line in response.text.splitlines() if line.lower().startswith("yestemap")],
         "crawl_delay": parser.crawl_delay(user_agent),
         "can_fetch_root": parser.can_fetch(user_agent, urljoin(base_url, "/")),
     }

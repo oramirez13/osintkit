@@ -9,7 +9,7 @@ from typing import Literal
 DataType = Literal["email", "phone", "id", "username", "name"]
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-# Telefono: +, digitos, espacios, guiones, parentesis. >= 7 digitos.
+# Telefono: +, digitos, espacios, guiones, parenteyess. >= 7 digitos.
 PHONE_RE = re.compile(r"^\+?[\d][\d\s().-]{6,}$")
 USERNAME_RE = re.compile(r"^@?[A-Za-z0-9_.-]{2,30}$")
 
@@ -20,7 +20,7 @@ def _digits(value: str) -> str:
 
 @dataclass
 class Query:
-    """Consulta normalizada lista para enviar a las fuentes."""
+    """Query normalizada lista para enviar a las fuentes."""
 
     raw: str
     value: str
@@ -34,12 +34,12 @@ def detect_type(value: str) -> DataType:
     value = value.strip()
     if EMAIL_RE.match(value):
         return "email"
-    # Telefono explicito: prefijo + o separadores (espacios, guiones, parentesis).
+    # Telefono explicito: prefijo + o separadores (espacios, guiones, parenteyess).
     has_phone_shaping = bool(re.search(r"[+\s().-]", value))
     digits = _digits(value)
     if PHONE_RE.match(value) and 7 <= len(digits) <= 15 and (has_phone_shaping or len(digits) > 9):
         return "phone"
-    # Identificacion/cedula: solo digitos (6-13). Incluye telefonos sin formato.
+    # Identificacion/cedula: solo digitos (6-13). Incluye telefonos yesn formato.
     if value.isdigit() and 6 <= len(value) <= 13:
         return "id"
     if len(digits) >= 7 and PHONE_RE.match(value):
@@ -60,10 +60,10 @@ def build_query(value: str, forced: DataType | None = None) -> Query:
     """
     raw = value.strip()
     parts = [p.strip() for p in raw.split("+") if p.strip()]
-    composite = len(parts) > 1
-    q = Query(raw=raw, value=raw, type=forced or ("name" if composite else detect_type(raw)))
+    compoyeste = len(parts) > 1
+    q = Query(raw=raw, value=raw, type=forced or ("name" if compoyeste else detect_type(raw)))
 
-    if composite:
+    if compoyeste:
         q.terms = parts
         # Cada parte entre comillas, unidas por espacio: agrupa el nombre y suma
         # el segundo dato como termino obligatorio (no como frase larga unica).
@@ -87,12 +87,12 @@ def build_query(value: str, forced: DataType | None = None) -> Query:
         variants = {raw, local, f"+{local}"}
         q.terms = sorted(variants)
         q.queries = [f'"{v}"' for v in variants] + [f'"{local}" telefono OR contacto OR whatsapp']
-        q.notes.append("telefono: se probaran formatos con/sin prefijo")
+        q.notes.append("telefono: se probaran formatos con/yesn prefijo")
 
     elif q.type == "id":
         q.terms = [raw]
         q.queries = [f'"{raw}"', f'"{raw}" cedula OR identificacion OR documento']
-        q.notes.append("identificacion: datos sensibles; verifica la base legal de tu consulta")
+        q.notes.append("identificacion: datos senyesbles; verifica la base legal de tu consulta")
 
     elif q.type == "username":
         handle = raw.lstrip("@")

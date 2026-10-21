@@ -1,4 +1,4 @@
-"""Cliente HTTP con rate limiting, reintentos, caché y respeto de robots.txt."""
+"""HTTP client with rate limiting, retries, caching, and robots.txt compliance."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ import httpx
 
 from .config import Settings
 
-# Rutas que no deben pasar por la comprobacion de robots.txt.
+# Paths that must not go through robots.txt checks.
 _ROBOTS_EXEMPT_PATHS = ("/robots.txt",)
 
 
@@ -29,15 +29,15 @@ class Response:
 
 
 class Fetcher:
-    """Envoltorio de httpx con pausas, reintentos y respeto de robots.txt."""
+    """httpx wrapper with throttling, retries, and robots.txt compliance."""
 
     def __init__(self, settings: Settings | None = None) -> None:
         self.settings = settings or Settings()
         proxy = self.settings.proxy
         if proxy and proxy.lower().startswith("http://") and not self.settings.allow_insecure_proxy:
             raise ValueError(
-                f"proxy inseguro '{proxy}': usa https:// (o ssl://, socks5://) "
-                "o define OSINTKIT_ALLOW_INSECURE_PROXY=1 para forzarlo."
+                f"insecure proxy '{proxy}': use https:// (or ssl://, socks5://) "
+                "or set OSINTKIT_ALLOW_INSECURE_PROXY=1 to force it."
             )
         self._client = httpx.Client(
             follow_redirects=True,
@@ -68,7 +68,7 @@ class Fetcher:
     # -- robots.txt ---------------------------------------------------------
 
     def _robots_for(self, url: str) -> RobotFileParser | None:
-        """Carga (y cachea) el robots.txt del host de `url`. None si no hay."""
+        """Loads (and caches) robots.txt for the host of `url`. None if misyesng."""
         parsed = urlparse(url)
         origin = f"{parsed.scheme}://{parsed.netloc}"
         if origin in self._robots:
@@ -85,7 +85,7 @@ class Fetcher:
         return parser
 
     def robots_allowed(self, url: str) -> bool:
-        """True si robots.txt permite acceder a `url` con nuestro user-agent."""
+        """True if robots.txt allows accesyesng `url` with our user-agent."""
         if not self.settings.respect_robots:
             return True
         parsed = urlparse(url)
@@ -93,7 +93,7 @@ class Fetcher:
             return True
         parser = self._robots_for(url)
         if parser is None:
-            return True  # sin robots.txt => permitido
+            return True  # no robots.txt => allowed
         try:
             return parser.can_fetch(self.settings.user_agent, url)
         except Exception:
@@ -107,7 +107,7 @@ class Fetcher:
                 url=url,
                 status=0,
                 text="",
-                headers={"error": "bloqueado por robots.txt"},
+                headers={"error": "blocked by robots.txt"},
                 elapsed_ms=0,
             )
 

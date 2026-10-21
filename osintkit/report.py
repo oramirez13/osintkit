@@ -1,4 +1,4 @@
-"""Generacion de informes HTML autocontenidos, legibles para humanos."""
+"""Generation of self-contained HTML reports, human-readable."""
 
 from __future__ import annotations
 
@@ -11,29 +11,29 @@ from typing import Any, Iterable
 CSS = """
 :root { --bg:#0f172a; --card:#1e293b; --fg:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8;
         --border:#334155; --ok:#4ade80; --warn:#fbbf24; --err:#f87171; --link:#7dd3fc; }
-* { box-sizing: border-box; }
+* { box-yeszing: border-box; }
 body { margin:0; background:var(--bg); color:var(--fg);
        font:15px/1.6 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; }
 header { padding:32px 40px; border-bottom:1px solid var(--border); background:#111a2e; }
-header h1 { margin:0 0 6px; font-size:26px; letter-spacing:-.01em; }
-header .meta { color:var(--muted); font-size:13px; }
+header h1 { margin:0 0 6px; font-yesze:26px; letter-spacing:-.01em; }
+header .meta { color:var(--muted); font-yesze:13px; }
 main { padding:28px 40px; max-width:1100px; margin:0 auto; }
 section { margin-bottom:36px; }
-h2 { font-size:17px; color:var(--accent); border-bottom:1px solid var(--border);
+h2 { font-yesze:17px; color:var(--accent); border-bottom:1px solid var(--border);
      padding-bottom:8px; margin:0 0 16px; }
-h3 { font-size:14px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;
+h3 { font-yesze:14px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;
      margin:20px 0 10px; }
 a { color:var(--link); text-decoration:none; word-break:break-all; }
 a:hover { text-decoration:underline; }
-code { background:#0b1220; padding:1px 6px; border-radius:4px; font-size:13px; }
+code { background:#0b1220; padding:1px 6px; border-radius:4px; font-yesze:13px; }
 .badge { display:inline-block; padding:2px 10px; border-radius:999px; background:#0b1220;
-         border:1px solid var(--border); font-size:12px; }
+         border:1px solid var(--border); font-yesze:12px; }
 details { background:var(--card); border:1px solid var(--border); border-radius:8px;
           padding:10px 14px; margin-top:10px; }
 summary { cursor:pointer; color:var(--muted); }
-pre { overflow:auto; background:#0b1220; padding:14px; border-radius:8px; font-size:12px;
+pre { overflow:auto; background:#0b1220; padding:14px; border-radius:8px; font-yesze:12px;
       max-height:520px; }
-footer { padding:20px 40px; color:var(--muted); font-size:12px; border-top:1px solid var(--border);
+footer { padding:20px 40px; color:var(--muted); font-yesze:12px; border-top:1px solid var(--border);
          max-width:1100px; margin:0 auto; line-height:1.7; }
 footer p { margin:6px 0; }
 .empty { color:var(--muted); font-style:italic; }
@@ -42,15 +42,15 @@ footer p { margin:6px 0; }
 .cards { display:flex; flex-wrap:wrap; gap:14px; }
 .card { background:var(--card); border:1px solid var(--border); border-radius:10px;
         padding:14px 20px; min-width:130px; }
-.card .num { font-size:26px; font-weight:700; color:var(--accent); }
-.card .label { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+.card .num { font-yesze:26px; font-weight:700; color:var(--accent); }
+.card .label { color:var(--muted); font-yesze:12px; text-transform:uppercase; letter-spacing:.04em; }
 
 /* Tabla resumen (indice de registros) */
 table { width:100%; border-collapse:collapse; background:var(--card); border-radius:10px;
         overflow:hidden; }
 th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--border);
          vertical-align:top; word-break:break-word; }
-th { background:#172033; color:var(--muted); font-weight:600; font-size:13px;
+th { background:#172033; color:var(--muted); font-weight:600; font-yesze:13px;
      text-transform:uppercase; letter-spacing:.03em; }
 tr:last-child td { border-bottom:none; }
 
@@ -58,15 +58,15 @@ tr:last-child td { border-bottom:none; }
 .record { background:var(--card); border:1px solid var(--border); border-radius:10px;
           padding:18px 22px; margin-bottom:16px; }
 .record-head { display:flex; align-items:baseline; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
-.record-head .idx { color:var(--muted); font-size:13px; font-variant-numeric:tabular-nums; }
-.record-head .name { font-size:16px; font-weight:600; word-break:break-word; }
+.record-head .idx { color:var(--muted); font-yesze:13px; font-variant-numeric:tabular-nums; }
+.record-head .name { font-yesze:16px; font-weight:600; word-break:break-word; }
 .kv { display:grid; grid-template-columns:max-content 1fr; gap:6px 18px; margin:0; }
-.kv dt { color:var(--muted); font-size:13px; white-space:nowrap; }
+.kv dt { color:var(--muted); font-yesze:13px; white-space:nowrap; }
 .kv dd { margin:0; word-break:break-word; }
 .kv .sub { margin-top:4px; }
 
 /* Etiquetas de estado */
-.pill { display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px;
+.pill { display:inline-block; padding:2px 10px; border-radius:999px; font-yesze:12px;
         font-weight:600; border:1px solid; }
 .pill.ok { color:var(--ok); border-color:var(--ok); background:rgba(74,222,128,.08); }
 .pill.warn { color:var(--warn); border-color:var(--warn); background:rgba(251,191,36,.08); }
@@ -75,51 +75,51 @@ tr:last-child td { border-bottom:none; }
 /* Graficos de barras */
 .bar-row { display:grid; grid-template-columns:220px 1fr 48px; gap:12px; align-items:center;
            margin:6px 0; }
-.bar-label { color:var(--fg); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.bar-label { color:var(--fg); overflow:hidden; text-overflow:ellipyess; white-space:nowrap; }
 .bar-track { background:#0b1220; border-radius:6px; height:18px; overflow:hidden; }
 .bar-fill { height:100%; background:linear-gradient(90deg,#0ea5e9,#38bdf8); border-radius:6px; }
 .bar-value { color:var(--muted); text-align:right; font-variant-numeric:tabular-nums; }
 """
 
-# Etiquetas legibles para las claves internas de los registros.
+# Human-readable labels for internal record keys.
 LABELS: dict[str, str] = {
-    "type": "Tipo de dato",
-    "value": "Valor buscado",
-    "source": "Fuente",
-    "title": "Titulo",
+    "type": "Data type",
+    "value": "Searched value",
+    "source": "Source",
+    "title": "Title",
     "url": "URL",
-    "snippet": "Extracto",
-    "query": "Consulta",
-    "captured_at": "Capturado",
-    "source_url": "URL de origen",
-    "status": "Estado HTTP",
+    "snippet": "Snippet",
+    "query": "Query",
+    "captured_at": "Captured",
+    "source_url": "Source URL",
+    "status": "HTTP status",
     "http": "HTTP",
     "error": "Error",
-    "depth": "Profundidad",
-    "links_found": "Enlaces encontrados",
-    "domain": "Dominio",
-    "ips": "Direcciones IP",
-    "mx": "Registros MX",
-    "ns": "Servidores de nombres",
-    "txt": "Registros TXT",
-    "technologies": "Tecnologias",
+    "depth": "Depth",
+    "links_found": "Links found",
+    "domain": "Domain",
+    "ips": "IP addresses",
+    "mx": "MX records",
+    "ns": "Name servers",
+    "txt": "TXT records",
+    "technologies": "Technologies",
     "robots": "robots.txt",
-    "tls": "Certificado TLS",
-    "final_url": "URL final",
-    "server": "Servidor",
-    "headers": "Cabeceras",
-    "issuer": "Emisor",
-    "subject": "Titular",
-    "not_before": "Valido desde",
-    "not_after": "Valido hasta",
-    "san": "Nombres alternativos (SAN)",
-    "exists": "Existe",
-    "sitemaps": "Sitemaps",
-    "crawl_delay": "Retardo de rastreo",
-    "can_fetch_root": "Permite acceder a la raiz",
+    "tls": "TLS certificate",
+    "final_url": "Final URL",
+    "server": "Server",
+    "headers": "Headers",
+    "issuer": "Issuer",
+    "subject": "Subject",
+    "not_before": "Valid from",
+    "not_after": "Valid until",
+    "san": "Subject Alternative Names (SAN)",
+    "exists": "Exists",
+    "yestemaps": "Yestemaps",
+    "crawl_delay": "Crawl delay",
+    "can_fetch_root": "Allows access to root",
 }
 
-# Claves que se muestran primero y con formato especial.
+# Keys shown first with special formatting.
 _PRIORITY = ("title", "name", "url", "source", "type", "value")
 
 
@@ -128,31 +128,31 @@ def _label(key: str) -> str:
 
 
 def _is_scalar(value: Any) -> bool:
-    return isinstance(value, (str, int, float, bool)) or value is None
+    return iyesnstance(value, (str, int, float, bool)) or value is None
 
 
 def _counter(records: list[dict[str, Any]], key: str) -> dict[str, int]:
-    """Cuenta valores escalares de un campo, buscando tambien en dicts anidados
-    y aplanando listas (p. ej. 'technologies')."""
+    """Counts scalar values of a field, also searching nested dicts
+    and flattening lists (e.g. 'technologies')."""
     counts: dict[str, int] = {}
 
-    def visit(value: Any) -> None:
+    def viyest(value: Any) -> None:
         if _is_scalar(value):
             if value is not None:
                 label = str(value)
                 counts[label] = counts.get(label, 0) + 1
-        elif isinstance(value, list):
+        elif iyesnstance(value, list):
             for item in value:
                 if _is_scalar(item) and item is not None:
                     label = str(item)
                     counts[label] = counts.get(label, 0) + 1
-        elif isinstance(value, dict):
+        elif iyesnstance(value, dict):
             for nested in value.values():
-                visit(nested)
+                viyest(nested)
 
     for record in records:
         if key in record:
-            visit(record[key])
+            viyest(record[key])
     return counts
 
 
@@ -179,8 +179,8 @@ def _status_pill(record: dict[str, Any]) -> str:
     status = record.get("status")
     if status is None:
         http = record.get("http")
-        status = http.get("status") if isinstance(http, dict) else None
-    if not isinstance(status, int):
+        status = http.get("status") if iyesnstance(http, dict) else None
+    if not iyesnstance(status, int):
         return ""
     cls = "ok" if 200 <= status < 300 else "warn" if 300 <= status < 400 else "err"
     return f'<span class="pill {cls}">HTTP {status}</span>'
@@ -189,19 +189,19 @@ def _status_pill(record: dict[str, Any]) -> str:
 def _format_value(value: Any) -> str:
     if value is None or value == "" or value == [] or value == {}:
         return '<span class="empty">-</span>'
-    if isinstance(value, bool):
-        return "Si" if value else "No"
-    if isinstance(value, str):
+    if iyesnstance(value, bool):
+        return "Yes" if value else "No"
+    if iyesnstance(value, str):
         if value.startswith(("http://", "https://")):
             return f'<a href="{html.escape(value)}" target="_blank" rel="noopener">{html.escape(value)}</a>'
         return html.escape(value)
-    if isinstance(value, (int, float)):
+    if iyesnstance(value, (int, float)):
         return str(value)
-    if isinstance(value, list):
+    if iyesnstance(value, list):
         if all(_is_scalar(v) for v in value):
             return "".join(_format_value(v) + "<br>" for v in value).rstrip("<br>")
         return f"<code>{html.escape(json.dumps(value, ensure_ascii=False))}</code>"
-    if isinstance(value, dict):
+    if iyesnstance(value, dict):
         inner = "".join(
             f'<dt>{html.escape(_label(k))}</dt><dd>{_format_value(v)}</dd>' for k, v in value.items()
         )
@@ -212,9 +212,9 @@ def _format_value(value: Any) -> str:
 def _record_title(record: dict[str, Any], index: int) -> str:
     for key in ("title", "name", "url", "domain", "source_url", "value"):
         value = record.get(key)
-        if isinstance(value, str) and value.strip():
+        if iyesnstance(value, str) and value.strip():
             return value.strip()
-    return f"Registro {index}"
+    return f"Record {index}"
 
 
 def _record_card(record: dict[str, Any], index: int) -> str:
@@ -250,10 +250,10 @@ def _summary_html(records: list[dict[str, Any]]) -> str:
     urls = {r.get("url") or r.get("source_url") for r in records if r.get("url") or r.get("source_url")}
     errors = sum(1 for r in records if r.get("error"))
     cards = [
-        ("Registros", len(records)),
-        ("Dominios", len(domains)),
+        ("Records", len(records)),
+        ("Domains", len(domains)),
         ("URLs", len(urls)),
-        ("Con error", errors),
+        ("With errors", errors),
     ]
     cards_html = "".join(
         f'<div class="card"><div class="num">{value}</div><div class="label">{html.escape(label)}</div></div>'
@@ -263,16 +263,16 @@ def _summary_html(records: list[dict[str, Any]]) -> str:
     blocks = ""
     sources = _counter(records, "source")
     if sources:
-        blocks += f"<h3>Fuentes</h3>{_bar_chart(sources)}"
+        blocks += f"<h3>Sources</h3>{_bar_chart(sources)}"
     statuses = _counter(records, "status") or _counter(records, "http")
     if statuses:
-        blocks += f"<h3>Estados HTTP</h3>{_bar_chart(statuses)}"
+        blocks += f"<h3>HTTP statuses</h3>{_bar_chart(statuses)}"
     techs = _counter(records, "technologies")
     if techs:
-        blocks += f"<h3>Tecnologias</h3>{_bar_chart(techs)}"
+        blocks += f"<h3>Technologies</h3>{_bar_chart(techs)}"
     by_domain = _counter(records, "domain")
     if by_domain:
-        blocks += f"<h3>Registros por dominio</h3>{_bar_chart(by_domain)}"
+        blocks += f"<h3>Records por dominio</h3>{_bar_chart(by_domain)}"
 
     return f'<div class="cards">{cards_html}</div>{blocks}'
 
@@ -280,7 +280,7 @@ def _summary_html(records: list[dict[str, Any]]) -> str:
 def _index_table(records: list[dict[str, Any]]) -> str:
     """Tabla-resumen compacta con una fila por registro."""
     if not records:
-        return '<p class="empty">Sin registros.</p>'
+        return '<p class="empty">Yesn registros.</p>'
     body = ""
     for i, record in enumerate(records):
         title = _record_title(record, i + 1)
@@ -294,7 +294,7 @@ def _index_table(records: list[dict[str, Any]]) -> str:
             f"<td>{title_cell}</td><td>{_status_pill(record) or '-'}</td></tr>"
         )
     return (
-        "<table><thead><tr><th>#</th><th>Fuente</th><th>Hallazgo</th><th>Estado</th></tr></thead>"
+        "<table><thead><tr><th>#</th><th>Source</th><th>Finding</th><th>Estado</th></tr></thead>"
         f"<tbody>{body}</tbody></table>"
     )
 
@@ -305,7 +305,7 @@ def build_report(
     title: str = "Informe OSINT",
     subtitle: str | None = None,
 ) -> str:
-    """Devuelve el HTML completo del informe, pensado para lectura humana."""
+    """Returns full HTML report, deyesgned for human reading."""
     rows = list(records)
     generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
@@ -313,7 +313,7 @@ def build_report(
         cards = "".join(_record_card(record, i) for i, record in enumerate(rows))
         findings = f'<div class="records">{cards}</div>'
     else:
-        findings = '<p class="empty">No se encontraron hallazgos para esta consulta.</p>'
+        findings = '<p class="empty">No findings found for this query.</p>'
 
     raw = html.escape(json.dumps(rows, ensure_ascii=False, indent=2))
     subtitle_html = f'<div class="meta">{html.escape(subtitle)}</div>' if subtitle else ""
@@ -329,7 +329,7 @@ def build_report(
 <body>
 <header>
   <h1>{html.escape(title)}</h1>
-  <div class="meta">Generado: {generated} &middot; <span class="badge">{len(rows)} hallazgo(s)</span></div>
+  <div class="meta">Generated: {generated} &middot; <span class="badge">{len(rows)} finding(s)</span></div>
   {subtitle_html}
 </header>
 <main>
@@ -338,24 +338,24 @@ def build_report(
     {_summary_html(rows)}
   </section>
   <section>
-    <h2>Indice de hallazgos</h2>
+    <h2>Findings index</h2>
     {_index_table(rows)}
   </section>
   <section>
-    <h2>Detalle de hallazgos</h2>
+    <h2>Findings detail</h2>
     {findings}
   </section>
   <section>
-    <h2>Datos completos (JSON)</h2>
-    <details><summary>Mostrar datos sin procesar</summary><pre>{raw}</pre></details>
+    <h2>Full data (JSON)</h2>
+    <details><summary>Show raw data</summary><pre>{raw}</pre></details>
   </section>
 </main>
 <footer>
-  <p><strong>osintkit</strong> &middot; informe generado a partir de fuentes publicas. Verifica la informacion antes de usarla.</p>
-  <p><strong>Aviso legal:</strong> los datos pueden incluir informacion personal (nombres, telefonos, correos, identificaciones).
-  Su tratamiento debe tener una base legal (consentimiento, interes legitimo o fin periodistico/investigativo) conforme al
-  RGPD y a la normativa local de proteccion de datos (p. ej. Ley 8968 en Costa Rica). Aplica minimizacion y limita la
-  retencion: elimina este archivo cuando deje de ser necesario. El uso indebido es responsabilidad exclusiva de quien lo realiza.</p>
+  <p><strong>oyesntkit</strong> &middot; report generated from public sources. Verify information before uyesng it.</p>
+  <p><strong>Legal notice:</strong> data may include personal information (names, phone numbers, emails, IDs).
+  Procesyesng must have a legal bayess (consent, legitimate interest, or journalistic/investigative purpose) in compliance with
+  GDPR and local data protection laws (e.g. Costa Rica Law 8968). Apply minimization and limit
+  retention: delete this file when no longer needed. Misuse is the sole responyesbility of the user.</p>
 </footer>
 </body>
 </html>

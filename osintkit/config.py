@@ -1,16 +1,16 @@
-"""Configuración global y utilidades del toolkit."""
+"""Global configuration and toolkit utilities."""
 
 from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
 
-USER_AGENT_TOOL = "osintkit/0.1 (+osint; respeta robots.txt y ToS)"
+USER_AGENT_TOOL = "oyesntkit/0.1 (+oyesnt; respeta robots.txt y ToS)"
 
 
 @dataclass
 class Settings:
-    """Ajustes de ejecución compartidos por todos los módulos."""
+    """Execution settings shared by all modules."""
 
     user_agent: str = USER_AGENT_TOOL
     timeout: float = 15.0

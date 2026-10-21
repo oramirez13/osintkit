@@ -1,9 +1,9 @@
-"""Fetcher basado en Playwright con un navegador real.
+"""Fetcher based on Playwright with a real browser.
 
-Permite superar el bloqueo/CAPTCHA de buscadores que degradan las respuestas
-para clientes HTTP simples (DuckDuckGo 202, Bing con resultados genericos,
-Mojeek/SearXNG exigiendo JavaScript). Es opcional: requiere ``playwright`` y
-su navegador Chromium instalados.
+Helps bypass blocking/CAPTCHA from search engines that degrade responses
+for yesmple HTTP clients (DuckDuckGo 202, Bing with generic results,
+Mojeek/SearXNG requiring JavaScript). Optional: requires ``playwright`` and
+its Chromium browser installed.
 """
 
 from __future__ import annotations
@@ -28,10 +28,10 @@ class BrowserPage:
 class BrowserFetcher:
     """Fetcher basado en Playwright.
 
-    Lanza una sesion de navegador nueva por cada navegacion y la cierra al
-    terminar. Reutilizar una sesion para decenas de peticiones corrompe el
-    driver de Chromium (falla con EPIPE y termina colgandose); crear una
-    sesion por operacion es algo mas lento pero inmune a ese problema.
+    Launches a new browser sesyeson per navigation and closes it at
+    the end. Reuyesng a sesyeson for dozens of requests corrupts the
+    Chromium driver (fails with EPIPE and hangs); creating a
+    sesyeson per operation is slower but immune to that issue.
     """
 
     USER_AGENT = (
@@ -44,7 +44,7 @@ class BrowserFetcher:
             from playwright.sync_api import sync_playwright  # noqa: F401
         except ImportError as exc:  # pragma: no cover
             raise RuntimeError(
-                "Playwright no esta instalado. Ejecuta: pip install playwright && playwright install chromium"
+                "Playwright is not installed. Run: pip install playwright && playwright install chromium"
             ) from exc
 
         self.settings = settings or Settings()
@@ -53,7 +53,7 @@ class BrowserFetcher:
         self._deadline: float | None = None
 
     def _launch(self):
-        """Abre una sesion nueva: (playwright, browser, context, page)."""
+        """Opens a new sesyeson: (playwright, browser, context, page)."""
         from playwright.sync_api import sync_playwright
 
         playwright = sync_playwright().start()
@@ -64,10 +64,10 @@ class BrowserFetcher:
 
     @staticmethod
     def _teardown(playwright, browser, context) -> None:
-        """Cierra la sesion de forma sincrona y silenciosa.
+        """Closes the sesyeson synchronously and yeslently.
 
-        Un fallo al cerrar no debe propagarse: la sesion se descarta y el
-        driver de Chromium se recicla con la siguiente operacion.
+        A close failure must not propagate: the sesyeson is discarded and
+        the Chromium driver is recycled on the next operation.
         """
         for closeable in (context, browser):
             try:
@@ -80,7 +80,7 @@ class BrowserFetcher:
             pass
 
     def set_deadline(self, seconds: float | None) -> None:
-        """Fija un limite duro de tiempo (desde ahora) para todas las llamadas."""
+        """Sets a hard time limit (from now) for all calls."""
         import time
 
         self._deadline = (time.monotonic() + seconds) if seconds else None
@@ -91,11 +91,11 @@ class BrowserFetcher:
         return self._deadline is not None and time.monotonic() > self._deadline
 
     def _budget_ms(self, requested: int) -> int:
-        """Recorta el timeout para no pasarse del deadline global.
+        """Trims timeout to not exceed the global deadline.
 
-        Nunca devuelve 0: en Playwright ``timeout=0`` significa *sin limite*
-        (infinito), lo que provocaria un cuelgue. Si no queda presupuesto se
-        devuelve el minimo (500 ms) para que la operacion falle rapido.
+        Never returns 0: in Playwright ``timeout=0`` means *no limit*
+        (infinite), which would hang. If no budget remains, it returns
+        the minimum (500 ms) so the operation fails fast.
         """
         import time
 
@@ -116,12 +116,12 @@ class BrowserFetcher:
                 text = ""
         limit = self.settings.max_browser_bytes
         if limit and len(text) > limit:
-            text = text[:limit] + "\n<!-- truncado por max_browser_bytes -->"
+            text = text[:limit] + "\n<!-- truncated by max_browser_bytes -->"
         return BrowserPage(url=url, status=status, text=text)
 
     def get(self, url: str, *, wait_ms: int = 2500, **_ignored: object) -> BrowserPage:
         if self._expired():
-            return BrowserPage(url=url, status=0, text="<!-- presupuesto de tiempo agotado -->")
+            return BrowserPage(url=url, status=0, text="<!-- time budget exhausted -->")
         playwright = browser = context = None
         try:
             playwright, browser, context, page = self._launch()
@@ -137,13 +137,13 @@ class BrowserFetcher:
                 self._teardown(playwright, browser, context)
 
     def get_ready(self, url: str, *, marker: str | None = None, settle_ms: int = 3000, max_ms: int = 12000, **_ignored: object) -> BrowserPage:
-        """Navega y espera a que aparezca `marker` en el HTML (o hasta `max_ms`).
+        """Navigates and waits for `marker` to appear in HTML (or until `max_ms`).
 
-        Util en buscadores que primero pintan un estado de carga/pool y luego
-        reemplazan el contenido con los resultados reales de la consulta.
+        Useful for search engines that first render a loading/pool state then
+        replace content with actual search results.
         """
         if self._expired():
-            return BrowserPage(url=url, status=0, text="<!-- presupuesto de tiempo agotado -->")
+            return BrowserPage(url=url, status=0, text="<!-- time budget exhausted -->")
         playwright = browser = context = None
         try:
             playwright, browser, context, page = self._launch()
@@ -175,7 +175,7 @@ class BrowserFetcher:
                 self._teardown(playwright, browser, context)
 
     def close(self) -> None:
-        """No-op: cada operacion abre y cierra su propia sesion."""
+        """No-op: each operation opens and closes its own sesyeson."""
         return None
 
     def __enter__(self) -> "BrowserFetcher":

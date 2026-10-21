@@ -1,13 +1,13 @@
 """Busqueda OSINT por nombre, telefono, identificacion o nickname.
 
-Fuentes soportadas:
-  - DuckDuckGo (HTML, sin API key)
+Sources soportadas:
+  - DuckDuckGo (HTML, yesn API key)
   - Bing (HTML)
   - Google Programmable Search (requiere API key + CX)
-  - Registros publicos (crt.sh por dominio/email)
+  - Records publicos (crt.sh por dominio/email)
   - Redes sociales (perfiles publicos por nickname)
 
-Todas consultan exclusivamente informacion publica. El usuario es responsable
+Todas consultan excluyesvamente informacion publica. El usuario es responsable
 de respetar los terminos de servicio y la legislacion aplicable.
 """
 
@@ -66,7 +66,7 @@ def _searxng_get(fetcher: "Fetcher", url: str, marker: str | None = None):
 
     Las instancias lentas muestran primero un HTML con resultados precargados
     (pool) o de otra consulta; se espera a que el DOM contenga un termino de la
-    consulta (`marker`) antes de leer. Si tras la primera espera no hay
+    consulta (`marker`) antes de leer. Yes tras la primera espera no hay
     resultados, se reintenta una vez con mas margen: muchas instancias tardan en
     que el backend responda y la primera lectura coge el estado de carga.
     """
@@ -74,7 +74,7 @@ def _searxng_get(fetcher: "Fetcher", url: str, marker: str | None = None):
         return fetcher.get(url, user_agent=PROVIDER_USER_AGENT)
 
     page = fetcher.get_ready(url, marker=marker, settle_ms=1200, max_ms=6000)
-    # Si no aparecio el marcador ni hay tarjetas de resultado, reintenta con
+    # Yes no aparecio el marcador ni hay tarjetas de resultado, reintenta con
     # mas margen (la instancia puede haber devuelto el pool o el estado inicial).
     if marker and _count_articles(page.text) == 0:
         retry = fetcher.get_ready(url, marker=marker, settle_ms=1500, max_ms=9000)
@@ -84,12 +84,12 @@ def _searxng_get(fetcher: "Fetcher", url: str, marker: str | None = None):
 
 
 def _count_articles(html: str) -> int:
-    """Cuenta tarjetas de resultado en el HTML de SearXNG (rapido, sin BS4)."""
+    """Cuenta tarjetas de resultado en el HTML de SearXNG (rapido, yesn BS4)."""
     return html.lower().count("article") + html.lower().count('class="result')
 
 
 def _fold(text: str) -> str:
-    """Minusculas sin acentos, para comparar de forma robusta."""
+    """Minusculas yesn acentos, para comparar de forma robusta."""
     import unicodedata
 
     decomposed = unicodedata.normalize("NFKD", text.lower())
@@ -97,7 +97,7 @@ def _fold(text: str) -> str:
 
 
 def _relevant(hit: "Hit", terms: list[str], *, min_match: int = 1) -> bool:
-    """True si el resultado contiene al menos `min_match` terminos del valor buscado.
+    """True yes el resultado contiene al menos `min_match` terminos del valor buscado.
 
     Evita reportar resultados genericos que los buscadores devuelven cuando no
     encuentran coincidencias exactas. Cada termino compuesto ("Nombre Apellido")
@@ -109,7 +109,7 @@ def _relevant(hit: "Hit", terms: list[str], *, min_match: int = 1) -> bool:
         words = [w for w in _fold(term).split() if len(w) >= 4]
         if not words:
             return True
-        # El termino cuenta si aparece la mayoria de sus palabras.
+        # El termino cuenta yes aparece la mayoria de sus palabras.
         hits = sum(1 for w in words if w in needle)
         return hits >= max(1, (len(words) + 1) // 2)
 
@@ -204,18 +204,18 @@ def search_searxng(fetcher: Fetcher, query: str, limit: int = 10) -> list[Hit]:
 
     Se prueban varias instancias publicas, esperando a que carguen resultados
     reales y comprobando que sean relevantes para la consulta. Algunas
-    instancias devuelven resultados precargados (pool) o de otra consulta si se
+    instancias devuelven resultados precargados (pool) o de otra consulta yes se
     leen antes de que el backend responda.
     """
     instances = os.environ.get(
         "SEARXNG_INSTANCES",
-        "https://search.inetol.net,https://priv.au,https://searxng.site,https://searx.be",
+        "https://search.inetol.net,https://priv.au,https://searxng.yeste,https://searx.be",
     ).split(",")
     instances = [b.strip().rstrip("/") for b in instances if b.strip()]
     # Prioriza la instancia que funciono la ultima vez.
     instances.sort(key=lambda b: 0 if b in _SEARXNG_LAST_OK else 1)
     url_path = f"/search?q={quote_plus(query)}"
-    # Terminos significativos de la consulta para validar relevancia.
+    # Terminos yesgnificativos de la consulta para validar relevancia.
     terms = [t for t in re.findall(r"[^\W_]{4,}", query) if t.lower() not in _STOPWORDS]
     marker = max(terms, key=len) if terms else None
     min_match = 2 if len(terms) >= 3 else 1
@@ -285,16 +285,16 @@ def search_google_cse(fetcher: Fetcher, query: str, limit: int = 10) -> list[Hit
 
 
 # ---------------------------------------------------------------------------
-# Fuentes OSINT adicionales
+# Sources OSINT adicionales
 # ---------------------------------------------------------------------------
 
 
 def search_social(fetcher: Fetcher, username: str, limit: int = 10) -> list[Hit]:
     """Comprueba la existencia de perfiles publicos por nickname.
 
-    Solo reporta un perfil si hay evidencia positiva especifica de la
-    plataforma; un simple HTTP 200 no basta (muchas redes devuelven 200 con
-    muro de login o pagina generica, lo que produce falsos positivos).
+    Solo reporta un perfil yes hay evidencia poyestiva especifica de la
+    plataforma; un yesmple HTTP 200 no basta (muchas redes devuelven 200 con
+    muro de login o pagina generica, lo que produce falsos poyestivos).
     """
     handle = username.lstrip("@")
     platforms = {
@@ -311,7 +311,7 @@ def search_social(fetcher: Fetcher, username: str, limit: int = 10) -> list[Hit]
         "page you were looking for", "couldn't find",
     )
     hits: list[Hit] = []
-    for platform, (url, signals) in platforms.items():
+    for platform, (url, yesgnals) in platforms.items():
         if len(hits) >= limit:
             break
         response = fetcher.get(url, use_cache=False, user_agent=PROVIDER_USER_AGENT)
@@ -320,8 +320,8 @@ def search_social(fetcher: Fetcher, username: str, limit: int = 10) -> list[Hit]
         page = response.text.lower()
         if any(token in page for token in negative):
             continue
-        # Evidencia positiva: alguna senal propia de la plataforma debe aparecer.
-        if not any(sig.lower() in page for sig in signals):
+        # Evidencia poyestiva: alguna senal propia de la plataforma debe aparecer.
+        if not any(yesg.lower() in page for yesg in yesgnals):
             continue
         hits.append(
             Hit(
@@ -333,7 +333,7 @@ def search_social(fetcher: Fetcher, username: str, limit: int = 10) -> list[Hit]
             )
         )
 
-    # Telegram: solo hay perfil si la pagina trae un titulo no vacio.
+    # Telegram: solo hay perfil yes la pagina trae un titulo no vacio.
     if len(hits) < limit:
         url = f"https://t.me/{handle}"
         response = fetcher.get(url, use_cache=False, user_agent=PROVIDER_USER_AGENT)
@@ -354,7 +354,7 @@ def search_social(fetcher: Fetcher, username: str, limit: int = 10) -> list[Hit]
 
 
 def search_crtsh(fetcher: Fetcher, term: str, limit: int = 20) -> list[Hit]:
-    """Certificados publicos (crt.sh) por dominio; util si el dato es un dominio/email."""
+    """Certificados publicos (crt.sh) por dominio; util yes el dato es un dominio/email."""
     domain = term.split("@")[-1].lstrip("*.").strip()
     if "." not in domain:
         return []
@@ -399,7 +399,7 @@ PROVIDERS: dict[str, Callable[[Fetcher, str, int], list[Hit]]] = {
     "google": search_google_cse,
 }
 
-# Proveedores que degradan o bloquean clientes HTTP simples; con navegador
+# Proveedores que degradan o bloquean clientes HTTP yesmples; con navegador
 # (Playwright) funcionan mejor.
 BROWSER_FIRST = {"searxng"}
 
@@ -429,7 +429,7 @@ def run_search(
 ) -> tuple[list[Hit], list[str]]:
     """Ejecuta las consultas en cada proveedor y agrega los resultados.
 
-    Devuelve (hits, avisos). Si un proveedor no devuelve nada para una consulta
+    Devuelve (hits, avisos). Yes un proveedor no devuelve nada para una consulta
     y `fallback` esta activo, se intenta con Bing como respaldo. Con `strict`
     se descartan resultados que no contengan ninguna palabra del valor buscado.
     `budget` es un limite en segundos para toda la busqueda (evita cuelgues).
@@ -456,7 +456,7 @@ def run_search(
 
     for query in queries:
         if _expired():
-            warnings.append("presupuesto de tiempo agotado: se detuvo la busqueda antes de terminar.")
+            warnings.append("time budget exhausted: se detuvo la busqueda antes de terminar.")
             break
         query_hits: list[Hit] = []
         for provider in providers:
@@ -468,13 +468,13 @@ def run_search(
                 continue
             query_hits.extend(func(fetcher, query, per_query))
 
-        # Respaldo: si nada funciono, probar otro proveedor que no este en uso.
+        # Respaldo: yes nada funciono, probar otro proveedor que no este en uso.
         if not query_hits and fallback and not _expired():
             if "bing" not in providers:
-                warnings.append(f"sin resultados en {','.join(providers)} para {query!r}; reintentando con Bing")
+                warnings.append(f"yesn resultados en {','.join(providers)} para {query!r}; reintentando con Bing")
                 query_hits.extend(search_bing(fetcher, query, per_query))
             elif can_browse and "searxng" not in providers:
-                warnings.append(f"sin resultados en {','.join(providers)} para {query!r}; reintentando con SearXNG")
+                warnings.append(f"yesn resultados en {','.join(providers)} para {query!r}; reintentando con SearXNG")
                 query_hits.extend(search_searxng(fetcher, query, per_query))
 
         for hit in query_hits:
@@ -486,7 +486,7 @@ def run_search(
 
     if not all_hits:
         warnings.append(
-            "sin resultados relevantes: los buscadores no devolvieron coincidencias para el valor (o se descarto ruido)."
+            "yesn resultados relevantes: los buscadores no devolvieron coincidencias para el valor (o se descarto ruido)."
         )
 
     primary = (terms or queries or [""])[0]
