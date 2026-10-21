@@ -136,83 +136,97 @@ def detect_type(value: str) -> DataType:
 
 
 def build_query(value: str, forced: DataType | None = None) -> Query:
-    """Normaliza el valor y genera variantes de consulta segun su tipo.
-
-    El valor puede combinar varios datos separados por ``+`` (p. ej.
-    ``"Maria Fernanda Cordero Rojas+G4S"``): se buscan juntos y por separado.
-    """
+    """Normaliza el valor y genera variantes de consulta segun su tipo."""
     raw = value.strip()
-    parts = [p.strip() for p in raw.split("+") if p.strip()]
-    compoyeste = len(parts) > 1
-    q = Query(
-        raw=raw, value=raw, type=forced or ("name" if compoyeste else detect_type(raw))
-    )
 
-    if q.type == "url":
-        host = _url_host(raw)
-        if not host:
-            raise ValueError(f"invalid URL or domain: {raw}")
-        q.terms = [host]
-        q.queries = [f'"{host}"', f"site:{host}"]
-        q.notes.append(f"sitio web: buscando menciones públicas de {host}")
-        return q
+    # Normalize profile URLs to names/usernames
+    if re.match(r'^https?://', raw):
+        try:
+            parsed = urlsplit(raw)
+            host = (parsed.hostname or '').lower()
+            path = unquote(parsed.path or '').strip('/')
+            if path:
+                if 'facebook.com' in host:
+                    if path.startswith('p/'):
+                        slug = path.split('/')[1]
+                        slug = re.sub(r'-\d+$', '', slug)
+                        slug = slug.replace('-', ' ').replace('_', ' ')
+                        raw = re.sub(r'\s+', ' ', slug).strip()
+                    elif path.startswith('profile.php'):
+                        pass
+                    else:
+                        segs = [s for s in path.split('/') if s and not s.isdigit() and s not in ('groups', 'events', 'pages', 'photo.php', 'permalink.php')]
+                        if segs:
+                            slug = segs[0].replace('.', ' ').replace('-', ' ').replace('_', ' ')
+                            raw = re.sub(r'\s+', ' ', slug).strip()
+                elif 'instagram.com' in host:
+                    segs = [s for s in path.split('/') if s and s not in ('p', 'reels', 'stories', 'explore', 'accounts', 'tv')]
+                    if segs and not segs[0].startswith('explore'):
+                        raw = '@' + segs[0]
+                elif host in ('x.com', 'twitter.com'):
+                    segs = [s for s in path.split('/') if s and s not in ('i', 'search', 'home', 'explore', 'notifications', 'messages', 'settings', 'compose')]
+                    if segs:
+                        raw = '@' + segs[0]
+                elif 'linkedin.com' in host and path.startswith('in/'):
+                    segs = path.split('/')
+                    if len(segs) >= 2 and segs[1]:
+                        slug = segs[1].replace('-', ' ').replace('_', ' ')
+                        raw = re.sub(r'\s+', ' ', slug).strip()
+                elif 'tiktok.com' in host and path.startswith('@'):
+                    segs = path.split('/')
+                    if segs and segs[0].startswith('@'):
+                        raw = segs[0]
+        except Exception:
+            pass
+
+    parts = [p.strip() for p in raw.split('+') if p.strip()]
+    compoyeste = len(parts) > 1
+    q = Query(raw=raw, value=raw, type=forced or ('name' if compoyeste else detect_type(raw)))
 
     if compoyeste:
         q.terms = parts
-        # Cada parte entre comillas, unidas por espacio: agrupa el nombre y suma
-        # el segundo dato como termino obligatorio (no como frase larga unica).
-        q.queries = [" ".join(f'"{p}"' for p in parts)]
-        # Cada dato por separado (util para no perder coincidencias parciales).
+        q.queries = [' '.join(f'"{p}"' for p in parts)]
         q.queries.extend(f'"{p}"' for p in parts)
-        q.notes.append(
-            f"consulta combinada: {len(parts)} datos buscados juntos y por separado"
-        )
+        q.notes.append(f'combined query: {len(parts)} data points searched together and separately')
         return q
 
-    if q.type == "email":
-        q.terms = [raw, raw.split("@")[0]]
+    if q.type == 'email':
+        q.terms = [raw, raw.split('@')[0]]
         q.queries = [
             f'"{raw}"',
-            f'"{raw}" email OR contacto OR perfil',
+            f'"{raw}" email OR contact OR profile',
             f'"{raw.split("@")[0]}"',
         ]
-        q.notes.append("email: se buscaran filtraciones publicas, perfiles y menciones")
-
-    elif q.type == "phone":
+        q.notes.append('email: public leaks, profiles and mentions will be searched')
+    elif q.type == 'phone':
         local = _digits(raw)
-        variants = {raw, local, f"+{local}"}
+        variants = {raw, local, f'+{local}'}
         q.terms = sorted(variants)
-        q.queries = [f'"{v}"' for v in variants] + [
-            f'"{local}" telefono OR contacto OR whatsapp'
-        ]
-        q.notes.append("telefono: se probaran formatos con/yesn prefijo")
-
-    elif q.type == "id":
+        q.queries = [f'"{v}"' for v in variants] + [f'"{local}" phone OR contact OR whatsapp']
+        q.notes.append('phone: will try formats with/without prefix')
+    elif q.type == 'id':
         q.terms = [raw]
-        q.queries = [f'"{raw}"', f'"{raw}" cedula OR identificacion OR documento']
-        q.notes.append(
-            "identificacion: datos senyesbles; verifica la base legal de tu consulta"
-        )
-
-    elif q.type == "username":
-        handle = raw.lstrip("@")
+        q.queries = [f'"{raw}"', f'"{raw}" id OR identification OR document']
+        q.notes.append('ID: sensitive data; verify legal basis for your query')
+    elif q.type == 'username':
+        handle = raw.lstrip('@')
         q.terms = [raw, handle]
         q.queries = [
             f'"{handle}"',
-            f'"{handle}" perfil OR usuario OR social',
+            f'"{handle}" profile OR user OR social',
             f'"@{handle}"',
         ]
-        q.notes.append("nickname: util para localizar perfiles en redes")
-
-    else:  # name
+        q.notes.append('nickname: useful for locating profiles on social networks')
+    else:
         terms = raw.split()
         q.terms = [raw] + terms
         q.queries = [
             f'"{raw}"',
-            f'"{raw}" perfil OR biografia OR noticias',
+            f'"{raw}" profile OR bio OR news',
             f'"{raw}" linkedin OR twitter OR instagram',
         ]
         if len(terms) >= 2:
             q.queries.append(f'"{terms[0]}" "{terms[-1]}"')
-
     return q
+
+
