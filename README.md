@@ -6,6 +6,14 @@
 >
 > **Legal notice:** results may contain personal data (names, phone numbers, emails, IDs). Only process them with a **legal basis** (consent, legitimate interest, or journalistic/investigative purpose), in compliance with GDPR and local regulations (e.g. Costa Rica's Law 8968). Apply data minimization and delete files in `output/` when no longer needed.
 
+## Screenshots
+
+![osintkit menu](img/osintkit_1.png)
+
+![osintkit search](img/osintkit_2.png)
+
+![osintkit report](img/osintkit_3.png)
+
 ## Installation
 
 The project includes a virtual environment in `.venv` with base dependencies (`httpx`, `beautifulsoup4`, `dnspython`, `rich`, `PyYAML`) and Playwright with Chromium. **Activate it before using the tool:**
