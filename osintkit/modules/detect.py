@@ -139,43 +139,56 @@ def build_query(value: str, forced: DataType | None = None) -> Query:
     """Normaliza el valor y genera variantes de consulta segun su tipo."""
     raw = value.strip()
 
-    # Normalize profile URLs to names/usernames
-    if re.match(r'^https?://', raw):
+    # Aggressively normalize profile URLs
+    if re.match(r'^https?://', raw, re.I):
         try:
             parsed = urlsplit(raw)
             host = (parsed.hostname or '').lower()
             path = unquote(parsed.path or '').strip('/')
             if path:
                 if 'facebook.com' in host:
-                    if path.startswith('p/'):
+                    if path.lower().startswith('p/'):
                         slug = path.split('/')[1]
-                        slug = re.sub(r'-\d+$', '', slug)
-                        slug = slug.replace('-', ' ').replace('_', ' ')
-                        raw = re.sub(r'\s+', ' ', slug).strip()
-                    elif path.startswith('profile.php'):
+                        # Remove trailing numbers
+                        slug = re.sub(r'-?\d{6,}$', '', slug)
+                        slug = slug.replace('-', ' ').replace('_', ' ').replace('.', ' ')
+                        slug = re.sub(r'\s+', ' ', slug).strip()
+                        if slug:
+                            raw = slug
+                    elif path.lower().startswith('profile.php'):
+                        # try to extract name from params? skip
                         pass
                     else:
-                        segs = [s for s in path.split('/') if s and not s.isdigit() and s not in ('groups', 'events', 'pages', 'photo.php', 'permalink.php')]
-                        if segs:
+                        # could be /username or /firstname.lastname
+                        segs = [s for s in path.split('/') if s]
+                        if segs and segs[0] not in ('groups', 'events', 'pages', 'watch', 'marketplace'):
                             slug = segs[0].replace('.', ' ').replace('-', ' ').replace('_', ' ')
-                            raw = re.sub(r'\s+', ' ', slug).strip()
+                            slug = re.sub(r'\s+', ' ', slug).strip()
+                            if slug:
+                                raw = slug
                 elif 'instagram.com' in host:
-                    segs = [s for s in path.split('/') if s and s not in ('p', 'reels', 'stories', 'explore', 'accounts', 'tv')]
-                    if segs and not segs[0].startswith('explore'):
-                        raw = '@' + segs[0]
-                elif host in ('x.com', 'twitter.com'):
-                    segs = [s for s in path.split('/') if s and s not in ('i', 'search', 'home', 'explore', 'notifications', 'messages', 'settings', 'compose')]
+                    segs = [s for s in path.split('/') if s and s.lower() not in ('p', 'reels', 'stories', 'explore', 'accounts', 'tv', 'tags', 'locations')]
                     if segs:
                         raw = '@' + segs[0]
-                elif 'linkedin.com' in host and path.startswith('in/'):
+                elif host in ('x.com', 'twitter.com'):
+                    segs = [s for s in path.split('/') if s and s.lower() not in ('i', 'search', 'home', 'explore', 'notifications', 'messages', 'settings', 'compose', 'tos', 'privacy')]
+                    if segs:
+                        raw = '@' + segs[0]
+                elif 'linkedin.com' in host and path.lower().startswith('in/'):
                     segs = path.split('/')
                     if len(segs) >= 2 and segs[1]:
                         slug = segs[1].replace('-', ' ').replace('_', ' ')
                         raw = re.sub(r'\s+', ' ', slug).strip()
                 elif 'tiktok.com' in host and path.startswith('@'):
                     segs = path.split('/')
+                    if segs:
+                        raw = segs[0]
+                elif 'threads.net' in host:
+                    segs = [s for s in path.split('/') if s and s.lower() != 'post']
                     if segs and segs[0].startswith('@'):
                         raw = segs[0]
+                    elif segs:
+                        raw = '@' + segs[0]
         except Exception:
             pass
 
@@ -223,7 +236,7 @@ def build_query(value: str, forced: DataType | None = None) -> Query:
         q.queries = [
             f'"{raw}"',
             f'"{raw}" profile OR bio OR news',
-            f'"{raw}" linkedin OR twitter OR instagram',
+            f'"{raw}" linkedin OR twitter OR instagram OR facebook',
         ]
         if len(terms) >= 2:
             q.queries.append(f'"{terms[0]}" "{terms[-1]}"')
