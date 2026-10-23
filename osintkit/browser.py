@@ -9,9 +9,11 @@ its Chromium browser installed.
 from __future__ import annotations
 
 import threading
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from urllib.parse import urlsplit
 
 from .config import Settings
+from .http import Fetcher
 
 
 @dataclass
@@ -39,7 +41,13 @@ class BrowserFetcher:
         "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
     )
 
-    def __init__(self, settings: Settings | None = None, *, headless: bool = True, timeout_ms: int | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        *,
+        headless: bool = True,
+        timeout_ms: int | None = None,
+    ) -> None:
         try:
             from playwright.sync_api import sync_playwright  # noqa: F401
         except ImportError as exc:  # pragma: no cover
@@ -51,6 +59,22 @@ class BrowserFetcher:
         self.timeout_ms = timeout_ms or int(self.settings.timeout * 1000)
         self.headless = headless
         self._deadline: float | None = None
+        robots_settings = replace(self.settings, user_agent=self.USER_AGENT)
+        self._robots_fetcher = (
+            Fetcher(robots_settings) if self.settings.respect_robots else None
+        )
+
+    def _robots_allowed(self, url: str) -> bool:
+        return self._robots_fetcher is None or self._robots_fetcher.robots_allowed(
+            url, user_agent=self.USER_AGENT
+        )
+
+    def _guard_route(self, route) -> None:
+        scheme = urlsplit(route.request.url).scheme
+        if scheme in ("http", "https") and not self._robots_allowed(route.request.url):
+            route.abort()
+            return
+        route.continue_()
 
     def _launch(self):
         """Opens a new sesyeson: (playwright, browser, context, page)."""
@@ -122,10 +146,16 @@ class BrowserFetcher:
     def get(self, url: str, *, wait_ms: int = 2500, **_ignored: object) -> BrowserPage:
         if self._expired():
             return BrowserPage(url=url, status=0, text="<!-- time budget exhausted -->")
+        if not self._robots_allowed(url):
+            return BrowserPage(url=url, status=0, text="<!-- blocked by robots.txt -->")
         playwright = browser = context = None
         try:
             playwright, browser, context, page = self._launch()
-            response = page.goto(url, timeout=self._budget_ms(self.timeout_ms), wait_until="commit")
+            if self._robots_fetcher is not None:
+                page.route("**/*", self._guard_route)
+            response = page.goto(
+                url, timeout=self._budget_ms(self.timeout_ms), wait_until="commit"
+            )
             wait_ms = self._budget_ms(wait_ms)
             if wait_ms:
                 page.wait_for_timeout(wait_ms)
@@ -136,7 +166,15 @@ class BrowserFetcher:
             if playwright is not None:
                 self._teardown(playwright, browser, context)
 
-    def get_ready(self, url: str, *, marker: str | None = None, settle_ms: int = 3000, max_ms: int = 12000, **_ignored: object) -> BrowserPage:
+    def get_ready(
+        self,
+        url: str,
+        *,
+        marker: str | None = None,
+        settle_ms: int = 3000,
+        max_ms: int = 12000,
+        **_ignored: object,
+    ) -> BrowserPage:
         """Navigates and waits for `marker` to appear in HTML (or until `max_ms`).
 
         Useful for search engines that first render a loading/pool state then
@@ -144,11 +182,17 @@ class BrowserFetcher:
         """
         if self._expired():
             return BrowserPage(url=url, status=0, text="<!-- time budget exhausted -->")
+        if not self._robots_allowed(url):
+            return BrowserPage(url=url, status=0, text="<!-- blocked by robots.txt -->")
         playwright = browser = context = None
         try:
             playwright, browser, context, page = self._launch()
+            if self._robots_fetcher is not None:
+                page.route("**/*", self._guard_route)
             try:
-                response = page.goto(url, timeout=self._budget_ms(self.timeout_ms), wait_until="commit")
+                response = page.goto(
+                    url, timeout=self._budget_ms(self.timeout_ms), wait_until="commit"
+                )
             except Exception as exc:
                 return BrowserPage(url=url, status=0, text=f"<!-- error: {exc} -->")
 
@@ -176,6 +220,8 @@ class BrowserFetcher:
 
     def close(self) -> None:
         """No-op: each operation opens and closes its own sesyeson."""
+        if self._robots_fetcher is not None:
+            self._robots_fetcher.close()
         return None
 
     def __enter__(self) -> "BrowserFetcher":

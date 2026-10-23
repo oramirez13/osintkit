@@ -159,17 +159,19 @@ def cmd_domain(args: argparse.Namespace) -> int:
 
 
 def cmd_crawl(args: argparse.Namespace) -> int:
+    settings = _settings(args)
     config = CrawlConfig(
         start_url=args.url,
         max_depth=args.depth,
         max_pages=args.max_pages,
         stay_on_host=not args.any_host,
-        respect_robots=not args.no_robots,
+        respect_robots=settings.respect_robots,
+        user_agent=settings.user_agent,
         include=tuple(args.include or ()),
         exclude=tuple(args.exclude or ()),
     )
-    recorder = Recorder(_settings(args).output_dir, prefix="crawl")
-    with Fetcher(_settings(args)) as fetcher:
+    recorder = Recorder(settings.output_dir, prefix="crawl")
+    with Fetcher(settings) as fetcher:
         results = crawl(fetcher, config)
     table = Table(title=f"Crawl: {config.start_url}")
     for column in ("depth", "status", "title", "links", "url"):
@@ -239,7 +241,9 @@ def cmd_search(args: argparse.Namespace) -> int:
     for column in ("source", "title", "url"):
         table.add_column(column, overflow="fold")
     for hit in hits:
-        table.add_row(escape(str(hit.source)), escape(str(hit.title)), escape(str(hit.url)))
+        table.add_row(
+            escape(str(hit.source)), escape(str(hit.title)), escape(str(hit.url))
+        )
         all_records.append(
             {
                 "type": query.type,
@@ -273,7 +277,8 @@ def cmd_report(args: argparse.Namespace) -> int:
             if line:
                 records.append(json.loads(line))
     title = args.title or os.path.splitext(os.path.basename(args.input))[0]
-    out_path = args.out or os.path.join(args.output, f"{title}.html")
+    filename = os.path.basename(title.replace("\\", "/")).strip(" .") or "report"
+    out_path = args.out or os.path.join(args.output, f"{filename}.html")
     subtitle = args.subtitle
     write_report(records, out_path, title=title, subtitle=subtitle)
     console.print(f"[green]Records:[/] {len(records)}")

@@ -105,48 +105,80 @@ class Query:
 def detect_type(value: str) -> DataType:
     value = value.strip()
     # Normalize profile URLs first
-    if re.match(r'^https?://', value, re.I):
+    if re.match(r"^https?://", value, re.I):
         try:
             parsed = urlsplit(value)
-            host = (parsed.hostname or '').lower()
-            path = unquote(parsed.path or '').strip('/')
-            if path and 'facebook.com' in host and path.lower().startswith('p/'):
-                slug = path.split('/')[1]
-                slug = re.sub(r'-?\d{6,}$', '', slug)
-                slug = slug.replace('-', ' ').replace('_', ' ').replace('.', ' ')
-                slug = re.sub(r'\s+', ' ', slug).strip()
+            host = (parsed.hostname or "").lower()
+            path = unquote(parsed.path or "").strip("/")
+            if path and "facebook.com" in host and path.lower().startswith("p/"):
+                slug = path.split("/")[1]
+                slug = re.sub(r"-?\d{6,}$", "", slug)
+                slug = slug.replace("-", " ").replace("_", " ").replace(".", " ")
+                slug = re.sub(r"\s+", " ", slug).strip()
                 if slug and len(slug.split()) >= 2:
                     value = slug
-            elif path and 'instagram.com' in host:
-                segs = [s for s in path.split('/') if s and s.lower() not in ('p', 'reels', 'stories', 'explore', 'accounts', 'tv', 'tags', 'locations')]
-                if segs and segs[0].lower() not in ('p', 'reels'):
-                    value = '@' + segs[0]
-            elif host in ('x.com', 'twitter.com'):
-                segs = [s for s in path.split('/') if s and s.lower() not in ('i', 'search', 'home', 'explore', 'notifications', 'messages', 'settings', 'compose', 'tos', 'privacy')]
+            elif path and "instagram.com" in host:
+                segs = [
+                    s
+                    for s in path.split("/")
+                    if s
+                    and s.lower()
+                    not in (
+                        "p",
+                        "reels",
+                        "stories",
+                        "explore",
+                        "accounts",
+                        "tv",
+                        "tags",
+                        "locations",
+                    )
+                ]
+                if segs and segs[0].lower() not in ("p", "reels"):
+                    value = "@" + segs[0]
+            elif host in ("x.com", "twitter.com"):
+                segs = [
+                    s
+                    for s in path.split("/")
+                    if s
+                    and s.lower()
+                    not in (
+                        "i",
+                        "search",
+                        "home",
+                        "explore",
+                        "notifications",
+                        "messages",
+                        "settings",
+                        "compose",
+                        "tos",
+                        "privacy",
+                    )
+                ]
                 if segs:
-                    value = '@' + segs[0]
-            elif 'linkedin.com' in host and path.lower().startswith('in/'):
-                segs = path.split('/')
+                    value = "@" + segs[0]
+            elif "linkedin.com" in host and path.lower().startswith("in/"):
+                segs = path.split("/")
                 if len(segs) >= 2 and segs[1]:
-                    slug = segs[1].replace('-', ' ').replace('_', ' ')
-                    value = re.sub(r'\s+', ' ', slug).strip()
-            elif 'tiktok.com' in host and path.startswith('@'):
-                segs = path.split('/')
+                    slug = segs[1].replace("-", " ").replace("_", " ")
+                    value = re.sub(r"\s+", " ", slug).strip()
+            elif "tiktok.com" in host and path.startswith("@"):
+                segs = path.split("/")
                 if segs:
                     value = segs[0]
-            elif 'threads.net' in host:
-                segs = [s for s in path.split('/') if s]
+            elif "threads.net" in host:
+                segs = [s for s in path.split("/") if s]
                 if segs:
-                    if segs[0].startswith('@'):
+                    if segs[0].startswith("@"):
                         value = segs[0]
                     else:
-                        value = '@' + segs[0]
+                        value = "@" + segs[0]
         except Exception:
             pass
 
     if EMAIL_RE.match(value):
         return "email"
-    if value.startswith('@') and USERNAME_RE.match(value):
+    if value.startswith("@") and USERNAME_RE.match(value):
         return "username"
     # URLs with scheme or bare domains
     if value.lower().startswith(("http://", "https://")) and _url_host(value):
@@ -157,7 +189,13 @@ def detect_type(value: str) -> DataType:
     # Telefono
     has_phone_shaping = bool(re.search(r"[+\s().-]", value))
     digits = _digits(value)
-    if PHONE_RE.match(value) and 7 <= len(digits) <= 15 and (has_phone_shaping or len(digits) > 9):
+    if (
+        PHONE_RE.match(value)
+        and 7 <= len(digits) <= 15
+        and (has_phone_shaping or len(digits) > 9)
+    ):
+        return "phone"
+    if value.isdigit() and len(value) == 8:
         return "phone"
     if value.isdigit() and 6 <= len(value) <= 13:
         return "id"
@@ -171,57 +209,103 @@ def detect_type(value: str) -> DataType:
     return "name"
 
 
-
 def build_query(value: str, forced: DataType | None = None) -> Query:
     """Normaliza el valor y genera variantes de consulta segun su tipo."""
     raw = value.strip()
 
     # Normalize profile URLs first
-    if re.match(r'^https?://', raw, re.I):
+    if re.match(r"^https?://", raw, re.I):
         try:
             parsed = urlsplit(raw)
-            host = (parsed.hostname or '').lower()
-            path = unquote(parsed.path or '').strip('/')
+            host = (parsed.hostname or "").lower()
+            path = unquote(parsed.path or "").strip("/")
             if path:
-                if 'facebook.com' in host:
-                    if path.lower().startswith('p/'):
-                        slug = path.split('/')[1]
-                        slug = re.sub(r'-?\d{6,}$', '', slug)
-                        slug = slug.replace('-', ' ').replace('_', ' ').replace('.', ' ')
-                        slug = re.sub(r'\s+', ' ', slug).strip()
+                if "facebook.com" in host:
+                    if path.lower().startswith("p/"):
+                        slug = path.split("/")[1]
+                        slug = re.sub(r"-?\d{6,}$", "", slug)
+                        slug = (
+                            slug.replace("-", " ").replace("_", " ").replace(".", " ")
+                        )
+                        slug = re.sub(r"\s+", " ", slug).strip()
                         if slug:
                             raw = slug
-                    elif not path.lower().startswith(('profile.php', 'groups', 'events', 'pages')):
-                        segs = [s for s in path.split('/') if s and not s.isdigit()]
-                        if segs and segs[0] not in ('groups', 'events', 'pages', 'watch', 'marketplace'):
-                            slug = segs[0].replace('.', ' ').replace('-', ' ').replace('_', ' ')
-                            slug = re.sub(r'\s+', ' ', slug).strip()
+                    elif not path.lower().startswith(
+                        ("profile.php", "groups", "events", "pages")
+                    ):
+                        segs = [s for s in path.split("/") if s and not s.isdigit()]
+                        if segs and segs[0] not in (
+                            "groups",
+                            "events",
+                            "pages",
+                            "watch",
+                            "marketplace",
+                        ):
+                            slug = (
+                                segs[0]
+                                .replace(".", " ")
+                                .replace("-", " ")
+                                .replace("_", " ")
+                            )
+                            slug = re.sub(r"\s+", " ", slug).strip()
                             if slug:
                                 raw = slug
-                elif 'instagram.com' in host:
-                    segs = [s for s in path.split('/') if s and s.lower() not in ('p', 'reels', 'stories', 'explore', 'accounts', 'tv', 'tags', 'locations')]
+                elif "instagram.com" in host:
+                    segs = [
+                        s
+                        for s in path.split("/")
+                        if s
+                        and s.lower()
+                        not in (
+                            "p",
+                            "reels",
+                            "stories",
+                            "explore",
+                            "accounts",
+                            "tv",
+                            "tags",
+                            "locations",
+                        )
+                    ]
                     if segs:
-                        raw = '@' + segs[0]
-                elif host in ('x.com', 'twitter.com'):
-                    segs = [s for s in path.split('/') if s and s.lower() not in ('i', 'search', 'home', 'explore', 'notifications', 'messages', 'settings', 'compose', 'tos', 'privacy')]
+                        raw = "@" + segs[0]
+                elif host in ("x.com", "twitter.com"):
+                    segs = [
+                        s
+                        for s in path.split("/")
+                        if s
+                        and s.lower()
+                        not in (
+                            "i",
+                            "search",
+                            "home",
+                            "explore",
+                            "notifications",
+                            "messages",
+                            "settings",
+                            "compose",
+                            "tos",
+                            "privacy",
+                        )
+                    ]
                     if segs:
-                        raw = '@' + segs[0]
-                elif 'linkedin.com' in host and path.lower().startswith('in/'):
-                    segs = path.split('/')
+                        raw = "@" + segs[0]
+                elif "linkedin.com" in host and path.lower().startswith("in/"):
+                    segs = path.split("/")
                     if len(segs) >= 2 and segs[1]:
-                        slug = segs[1].replace('-', ' ').replace('_', ' ')
-                        raw = re.sub(r'\s+', ' ', slug).strip()
-                elif 'tiktok.com' in host and path.startswith('@'):
-                    segs = path.split('/')
+                        slug = segs[1].replace("-", " ").replace("_", " ")
+                        raw = re.sub(r"\s+", " ", slug).strip()
+                elif "tiktok.com" in host and path.startswith("@"):
+                    segs = path.split("/")
                     if segs:
                         raw = segs[0]
-                elif 'threads.net' in host:
-                    segs = [s for s in path.split('/') if s]
+                elif "threads.net" in host:
+                    segs = [s for s in path.split("/") if s]
                     if segs:
-                        if segs[0].startswith('@'):
+                        if segs[0].startswith("@"):
                             raw = segs[0]
                         else:
-                            raw = '@' + segs[0]
+                            raw = "@" + segs[0]
         except Exception:
             pass
 
@@ -229,44 +313,50 @@ def build_query(value: str, forced: DataType | None = None) -> Query:
     if EMAIL_RE.match(raw) or PHONE_RE.match(raw):
         parts = [raw]
     else:
-        parts = [p.strip() for p in raw.split('+') if p.strip()]
+        parts = [p.strip() for p in raw.split("+") if p.strip()]
     compoyeste = len(parts) > 1
-    q = Query(raw=raw, value=raw, type=forced or ('name' if compoyeste else detect_type(raw)))
+    q = Query(
+        raw=raw, value=raw, type=forced or ("name" if compoyeste else detect_type(raw))
+    )
 
     if compoyeste:
         q.terms = parts
-        q.queries = [' '.join(f'"{p}"' for p in parts)]
+        q.queries = [" ".join(f'"{p}"' for p in parts)]
         q.queries.extend(f'"{p}"' for p in parts)
-        q.notes.append(f'combined query: {len(parts)} data points searched together and separately')
+        q.notes.append(
+            f"combined query: {len(parts)} data points searched together and separately"
+        )
         return q
 
-    if q.type == 'email':
-        q.terms = [raw, raw.split('@')[0]]
+    if q.type == "email":
+        q.terms = [raw, raw.split("@")[0]]
         q.queries = [
             f'"{raw}"',
             f'"{raw}" email OR contact OR profile',
             f'"{raw.split("@")[0]}"',
         ]
-        q.notes.append('email: public leaks, profiles and mentions will be searched')
-    elif q.type == 'phone':
+        q.notes.append("email: public leaks, profiles and mentions will be searched")
+    elif q.type == "phone":
         local = _digits(raw)
-        variants = {raw, local, f'+{local}'}
+        variants = {raw, local, f"+{local}"}
         q.terms = sorted(variants)
-        q.queries = [f'"{v}"' for v in variants] + [f'"{local}" phone OR contact OR whatsapp']
-        q.notes.append('phone: will try formats with/without prefix')
-    elif q.type == 'id':
+        q.queries = [f'"{v}"' for v in variants] + [
+            f'"{local}" phone OR contact OR whatsapp'
+        ]
+        q.notes.append("phone: will try formats with/without prefix")
+    elif q.type == "id":
         q.terms = [raw]
         q.queries = [f'"{raw}"', f'"{raw}" id OR identification OR document']
-        q.notes.append('ID: sensitive data; verify legal basis for your query')
-    elif q.type == 'username':
-        handle = raw.lstrip('@')
+        q.notes.append("ID: sensitive data; verify legal basis for your query")
+    elif q.type == "username":
+        handle = raw.lstrip("@")
         q.terms = [raw, handle]
         q.queries = [
             f'"{handle}"',
             f'"{handle}" profile OR user OR social',
             f'"@{handle}"',
         ]
-        q.notes.append('nickname: useful for locating profiles on social networks')
+        q.notes.append("nickname: useful for locating profiles on social networks")
     else:
         terms = raw.split()
         q.terms = [raw] + terms
@@ -278,5 +368,3 @@ def build_query(value: str, forced: DataType | None = None) -> Query:
         if len(terms) >= 2:
             q.queries.append(f'"{terms[0]}" "{terms[-1]}"')
     return q
-
-

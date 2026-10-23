@@ -32,6 +32,12 @@ def _flatten(record: dict[str, Any], prefix: str = "") -> dict[str, Any]:
     return flat
 
 
+def _sanitize_csv_cell(value: Any) -> Any:
+    if isinstance(value, str) and value.lstrip(" \t\r\n")[:1] in {"=", "+", "-", "@"}:
+        return "'" + value
+    return value
+
+
 class Recorder:
     """Accumulates records and allows exporting to multiple formats."""
 
@@ -77,10 +83,18 @@ class Recorder:
                     fieldnames.append(key)
         path = self._path("csv")
         with open(path, "w", encoding="utf-8", newline="") as handle:
-            writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
+            safe_fieldnames = [_sanitize_csv_cell(name) for name in fieldnames]
+            writer = csv.DictWriter(
+                handle, fieldnames=safe_fieldnames, extrasaction="ignore"
+            )
             writer.writeheader()
             for row in rows:
-                writer.writerow({k: _sanitize_csv_cell(row.get(k, "")) for k in fieldnames})
+                writer.writerow(
+                    {
+                        _sanitize_csv_cell(key): _sanitize_csv_cell(row.get(key, ""))
+                        for key in fieldnames
+                    }
+                )
         try:
             os.chmod(path, 0o600)
         except Exception:
