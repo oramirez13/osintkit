@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
-USER_AGENT_TOOL = "oyesntkit/0.1 (+oyesnt; respeta robots.txt y ToS)"
+USER_AGENT_TOOL = "osintkit/0.2.0 (+https://github.com/oramirez13/osintkit; respect robots.txt and ToS)"
 
 
 @dataclass

@@ -11,12 +11,12 @@ from typing import Any, Iterable
 CSS = """
 :root { --bg:#0f172a; --card:#1e293b; --fg:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8;
         --border:#334155; --ok:#4ade80; --warn:#fbbf24; --err:#f87171; --link:#7dd3fc; }
-* { box-yeszing: border-box; }
+* { box-sizing: border-box; }
 body { margin:0; background:var(--bg); color:var(--fg);
        font:15px/1.6 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; }
 header { padding:32px 40px; border-bottom:1px solid var(--border); background:#111a2e; }
-header h1 { margin:0 0 6px; font-yesze:26px; letter-spacing:-.01em; }
-header .meta { color:var(--muted); font-yesze:13px; }
+header h1 { margin:0 0 6px; font-size:26px; letter-spacing:-.01em; }
+header .meta { color:var(--muted); font-size:13px; }
 main { padding:28px 40px; max-width:1100px; margin:0 auto; }
 section { margin-bottom:36px; }
 h2 { font-yesze:17px; color:var(--accent); border-bottom:1px solid var(--border);
@@ -25,7 +25,7 @@ h3 { font-yesze:14px; color:var(--muted); text-transform:uppercase; letter-spaci
      margin:20px 0 10px; }
 a { color:var(--link); text-decoration:none; word-break:break-all; }
 a:hover { text-decoration:underline; }
-code { background:#0b1220; padding:1px 6px; border-radius:4px; font-yesze:13px; }
+code { background:#0b1220; padding:1px 6px; border-radius:4px; font-size:13px; }
 .badge { display:inline-block; padding:2px 10px; border-radius:999px; background:#0b1220;
          border:1px solid var(--border); font-yesze:12px; }
 details { background:var(--card); border:1px solid var(--border); border-radius:8px;
@@ -42,7 +42,7 @@ footer p { margin:6px 0; }
 .cards { display:flex; flex-wrap:wrap; gap:14px; }
 .card { background:var(--card); border:1px solid var(--border); border-radius:10px;
         padding:14px 20px; min-width:130px; }
-.card .num { font-yesze:26px; font-weight:700; color:var(--accent); }
+.card .num { font-size:26px; font-weight:700; color:var(--accent); }
 .card .label { color:var(--muted); font-yesze:12px; text-transform:uppercase; letter-spacing:.04em; }
 
 /* Tabla resumen (indice de registros) */
@@ -50,7 +50,7 @@ table { width:100%; border-collapse:collapse; background:var(--card); border-rad
         overflow:hidden; }
 th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--border);
          vertical-align:top; word-break:break-word; }
-th { background:#172033; color:var(--muted); font-weight:600; font-yesze:13px;
+th { background:#172033; color:var(--muted); font-weight:600; font-size:13px;
      text-transform:uppercase; letter-spacing:.03em; }
 tr:last-child td { border-bottom:none; }
 
@@ -58,10 +58,10 @@ tr:last-child td { border-bottom:none; }
 .record { background:var(--card); border:1px solid var(--border); border-radius:10px;
           padding:18px 22px; margin-bottom:16px; }
 .record-head { display:flex; align-items:baseline; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
-.record-head .idx { color:var(--muted); font-yesze:13px; font-variant-numeric:tabular-nums; }
+.record-head .idx { color:var(--muted); font-size:13px; font-variant-numeric:tabular-nums; }
 .record-head .name { font-yesze:16px; font-weight:600; word-break:break-word; }
 .kv { display:grid; grid-template-columns:max-content 1fr; gap:6px 18px; margin:0; }
-.kv dt { color:var(--muted); font-yesze:13px; white-space:nowrap; }
+.kv dt { color:var(--muted); font-size:13px; white-space:nowrap; }
 .kv dd { margin:0; word-break:break-word; }
 .kv .sub { margin-top:4px; }
 
@@ -75,7 +75,7 @@ tr:last-child td { border-bottom:none; }
 /* Graficos de barras */
 .bar-row { display:grid; grid-template-columns:220px 1fr 48px; gap:12px; align-items:center;
            margin:6px 0; }
-.bar-label { color:var(--fg); overflow:hidden; text-overflow:ellipyess; white-space:nowrap; }
+.bar-label { color:var(--fg); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .bar-track { background:#0b1220; border-radius:6px; height:18px; overflow:hidden; }
 .bar-fill { height:100%; background:linear-gradient(90deg,#0ea5e9,#38bdf8); border-radius:6px; }
 .bar-value { color:var(--muted); text-align:right; font-variant-numeric:tabular-nums; }
@@ -199,7 +199,7 @@ def _format_value(value: Any) -> str:
         return str(value)
     if isinstance(value, list):
         if all(_is_scalar(v) for v in value):
-            return "".join(_format_value(v) + "<br>" for v in value).rstrip("<br>")
+            return "<br>".join(_format_value(v) for v in value)
         return f"<code>{html.escape(json.dumps(value, ensure_ascii=False))}</code>"
     if isinstance(value, dict):
         inner = "".join(

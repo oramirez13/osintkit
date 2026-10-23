@@ -11,6 +11,7 @@ from typing import Any
 import yaml
 from rich.console import Console
 from rich.table import Table
+from rich.markup import escape
 
 from .browser import BrowserFetcher
 from .config import Settings
@@ -100,8 +101,9 @@ def cmd_scrape(args: argparse.Namespace) -> int:
         raw = yaml.safe_load(handle)
     specs = raw["scrapes"] if isinstance(raw, dict) and "scrapes" in raw else [raw]
 
-    recorder = Recorder(_settings(args).output_dir, prefix="scrape")
-    with Fetcher(_settings(args)) as fetcher:
+    settings = _settings(args)
+    recorder = Recorder(settings.output_dir, prefix="scrape")
+    with Fetcher(settings) as fetcher:
         for item in specs:
             spec = ScrapeSpec.from_dict(item)
             rows = scrape_url(fetcher, spec)
@@ -227,6 +229,7 @@ def cmd_search(args: argparse.Namespace) -> int:
             fallback=not args.no_fallback,
             strict=not args.no_strict,
             budget=args.budget,
+            query_type=query.type,
         )
 
     for warning in warnings:
@@ -236,7 +239,7 @@ def cmd_search(args: argparse.Namespace) -> int:
     for column in ("source", "title", "url"):
         table.add_column(column, overflow="fold")
     for hit in hits:
-        table.add_row(hit.source, hit.title, hit.url)
+        table.add_row(escape(str(hit.source)), escape(str(hit.title)), escape(str(hit.url)))
         all_records.append(
             {
                 "type": query.type,
@@ -250,7 +253,7 @@ def cmd_search(args: argparse.Namespace) -> int:
         )
     console.print(table)
 
-    recorder = Recorder(_settings(args).output_dir, prefix="search")
+    recorder = Recorder(settings.output_dir, prefix="search")
     recorder.extend(all_records)
     _save(
         recorder,
@@ -391,10 +394,12 @@ def _start_menu() -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
-    args, _unknown = parser.parse_known_args(argv)
+    args = parser.parse_args(argv)
     if args.command is None:
         return _start_menu()
-    return args.func(args)
+    if hasattr(args, "func"):
+        return args.func(args)
+    return _start_menu()
 
 
 if __name__ == "__main__":

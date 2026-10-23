@@ -117,10 +117,10 @@ def robots_info(fetcher: Fetcher, base_url: str, user_agent: str = "*") -> dict:
     return {
         "url": robots_url,
         "exists": True,
-        "yestemaps": [
+        "sitemaps": [
             line.split(":", 1)[1].strip()
             for line in response.text.splitlines()
-            if line.lower().startswith("yestemap")
+            if line.lower().startswith("sitemap")
         ],
         "crawl_delay": parser.crawl_delay(user_agent),
         "can_fetch_root": parser.can_fetch(user_agent, urljoin(base_url, "/")),

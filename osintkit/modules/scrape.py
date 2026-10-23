@@ -95,9 +95,23 @@ def _extract_xpath(html: str, spec: ScrapeSpec) -> list[dict[str, Any]]:
                     continue
                 node = nodes[0]
                 if field.attr:
-                    row[field.name] = node.get(field.attr)
+                    try:
+                        row[field.name] = node.get(field.attr)
+                    except Exception:
+                        row[field.name] = field.default
                 else:
-                    row[field.name] = node if isinstance(node, str) else (node.text_content().strip() or field.default)
+                    if isinstance(node, str):
+                        row[field.name] = node
+                    else:
+                        try:
+                            if hasattr(node, "xpath"):
+                                row[field.name] = "".join(node.xpath("string()")).strip() or field.default
+                            elif hasattr(node, "text_content"):
+                                row[field.name] = node.text_content().strip() or field.default
+                            else:
+                                row[field.name] = field.default
+                        except Exception:
+                            row[field.name] = field.default
         rows.append(row)
     return rows
 

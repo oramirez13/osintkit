@@ -79,7 +79,12 @@ class Recorder:
         with open(path, "w", encoding="utf-8", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
             writer.writeheader()
-            writer.writerows(rows)
+            for row in rows:
+                writer.writerow({k: _sanitize_csv_cell(row.get(k, "")) for k in fieldnames})
+        try:
+            os.chmod(path, 0o600)
+        except Exception:
+            pass
         return path
 
     def save_all(self, formats: Iterable[str] = ("jsonl", "csv")) -> list[str]:

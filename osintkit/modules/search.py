@@ -229,7 +229,7 @@ def search_searxng(fetcher: Fetcher, query: str, limit: int = 10) -> list[Hit]:
     """
     instances = os.environ.get(
         "SEARXNG_INSTANCES",
-        "https://search.inetol.net,https://priv.au,https://searxng.yeste,https://searx.be",
+        "https://search.inetol.net,https://priv.au,https://searx.be,https://searx.be",
     ).split(",")
     instances = [b.strip().rstrip("/") for b in instances if b.strip()]
     # Prioriza la instancia que funciono la ultima vez.
@@ -458,6 +458,7 @@ def run_search(
     fallback: bool = True,
     strict: bool = True,
     budget: float | None = None,
+    query_type: str | None = None,
 ) -> tuple[list[Hit], list[str]]:
     """Ejecuta las consultas en cada proveedor y agrega los resultados.
 
@@ -536,6 +537,7 @@ def run_search(
     primary = (terms or queries or [""])[0]
     if (
         include_social
+        and query_type == "username"
         and primary
         and not _expired()
         and re.match(r"^@?[A-Za-z0-9_.-]{2,30}$", primary)
